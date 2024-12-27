@@ -117,4 +117,4 @@
 
 ## **Datové předpoklady**
 
-![Datové předpoklady](/images/data_assumptions.png)
+![Datové předpoklady](./images/data_assumptions.png)
