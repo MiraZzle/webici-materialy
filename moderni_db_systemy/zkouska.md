@@ -414,3 +414,237 @@ reduce(String key, Iterator values):
 - Pocet volnych slotu posila pres heartbeat JobTrackeru
 
 ![alt](./images/mapreduce_hdfs.png)
+
+# Apache Spark
+
+- data analytics engine
+- narozdil od Hadoop MapReduce je rychlejsi diky praci in memory narozdil od disk I/O, ktery zpomaloval MapReduce
+- podporuje taky Spark SQL
+
+## Driver program
+
+- Spark Aplikace = driver program
+- Obsahuje uzivatelem specifikovany kod pro dany problem a provadi orchestraci
+- koordinuje paralelni zpracovani
+- nasloucha executorum (worker nodes)
+- mela by bezet blizko worker nodes (idealni v jedne LAN)
+- Je spravovan skrze Web UI (ukazoval nam Yaghob v Cloudu)
+
+## SparkContext
+
+- centralni entita v driver programu
+- koordinace mezi driverem a cluste managerem
+- ridi resourcy a provadeni tasku
+
+## ClusterManager
+
+- spark si muze vybrat Cluster Managera
+- externi system, ktery alokuje resourcy
+- Priklady: Kubernetes, YARN (Resource Manager Hadoopu), Apache Mesos
+
+## Resilient Distributed Dataset (RDD)
+
+- immutabilni
+- kolekce elementu rozdelenych mezi uzly v clusteru
+- automaticka recovery
+- lze persistovat v pameti (volani `persist` nebo `cache` funkci)
+- paralelni zpracovani
+
+### Jak vytvorit RDD
+
+- paralelizujeme existujici kolekci v driver programu
+
+```Java
+List<Integer> data = Arrays.asList(1, 2, 3, 4, 5);
+JavaRDD<Integer> distData = sc.parallelize(data);
+```
+
+- reference na externi dataset (treba v HDFS nebo Local file system) podporovany **Hadoopem**
+
+```Java
+JavaRDD<String> distFile = sc.textFile("data.txt");
+```
+
+## RDD operace
+
+- delime na Transformace a Akce
+
+## RDD Transformace
+
+- vytvoreni noveho datasetu z existujiciho
+- prakticky `map` funkce
+
+### **1. `map(func)`**
+
+- **Popis:** Vytvoří nové rozdělené dataset (`RDD`), kde každý prvek původního datasetu je transformován funkcí `func`.
+
+```java
+// Příklad: Zvětší každý prvek o 1
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 4));
+JavaRDD<Integer> mappedRDD = rdd.map(x -> x + 1);
+```
+
+---
+
+### **2. `union(otherDataset)`**
+
+- **Popis:** Spojí dva dataset (`RDD`) a vrátí nový dataset, který obsahuje všechny prvky z obou.
+
+```java
+// Příklad: Spojení dvou datasetů
+JavaRDD<Integer> rdd1 = sc.parallelize(Arrays.asList(1, 2, 3));
+JavaRDD<Integer> rdd2 = sc.parallelize(Arrays.asList(4, 5, 6));
+JavaRDD<Integer> unionRDD = rdd1.union(rdd2);
+```
+
+---
+
+### **3. `filter(func)`**
+
+- **Popis:** Vrátí nový dataset, který obsahuje pouze prvky, na kterých funkce `func` vrátí `true`.
+
+```java
+// Příklad: Filtrace sudých čísel
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 4));
+JavaRDD<Integer> filteredRDD = rdd.filter(x -> x % 2 == 0);
+```
+
+---
+
+### **4. `reduceByKey(func, [numPartitions])`**
+
+- **Popis:** Pokud pracujete s páry `(K, V)`, agreguje hodnoty pro každý klíč pomocí funkce `func`. Volitelně můžete nastavit počet oddílů.
+
+```java
+// Příklad: Sčítání hodnot podle klíče
+JavaPairRDD<String, Integer> pairs = sc.parallelizePairs(Arrays.asList(
+    new Tuple2<>("a", 1),
+    new Tuple2<>("b", 2),
+    new Tuple2<>("a", 3)
+));
+JavaPairRDD<String, Integer> reducedRDD = pairs.reduceByKey((x, y) -> x + y);
+```
+
+---
+
+### **5. `sortByKey([ascending], [numPartitions])`**
+
+- **Popis:** Seřadí páry `(K, V)` podle klíče. Můžete zvolit vzestupné (`true`) nebo sestupné (`false`) řazení.
+
+```java
+// Příklad: Seřazení párů podle klíče vzestupně
+JavaPairRDD<String, Integer> pairs = sc.parallelizePairs(Arrays.asList(
+    new Tuple2<>("b", 2),
+    new Tuple2<>("a", 1),
+    new Tuple2<>("c", 3)
+));
+JavaPairRDD<String, Integer> sortedRDD = pairs.sortByKey(true);
+```
+
+---
+
+### Další funkce:
+
+- **`intersection`**: Vrátí dataset s prvky, které se nachází v obou vstupech.
+- **`distinct`**: Vrátí dataset obsahující pouze unikátní prvky.
+
+```java
+// Příklad: Unikátní prvky
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 2, 3, 4, 4));
+JavaRDD<Integer> distinctRDD = rdd.distinct();
+```
+
+## RDD Akce
+
+- vratime hodnotu do driveru po nejaky vypoctu nad datasetem
+- prakticky `reduce` funkce
+
+### **1. `reduce(func)`**
+
+- **Popis:** Agreguje prvky datasetu pomocí funkce `func`. Funkce musí být **komutativní** a **asociativní**, aby výpočet mohl probíhat paralelně.
+
+```java
+// Příklad: Součet všech čísel v datasetu
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 4));
+Integer sum = rdd.reduce((x, y) -> x + y);
+```
+
+---
+
+### **2. `count()`**
+
+- **Popis:** Vrátí počet prvků v datasetu.
+
+```java
+// Příklad: Spočítání prvků v datasetu
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 4));
+long count = rdd.count();
+```
+
+---
+
+### **3. `first()`**
+
+- **Popis:** Vrátí první prvek datasetu.
+
+```java
+// Příklad: Získání prvního prvku
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 4));
+Integer firstElement = rdd.first();
+```
+
+---
+
+### **4. `take(n)`**
+
+- **Popis:** Vrátí pole s prvních `n` prvky datasetu.
+
+```java
+// Příklad: Získání prvních 2 prvků
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 3, 4));
+List<Integer> firstTwo = rdd.take(2);
+```
+
+---
+
+### **5. `takeOrdered(n, [ordering])`**
+
+- **Popis:** Vrátí prvních `n` prvků datasetu, seřazených buď podle jejich přirozeného pořadí, nebo podle vlastní komparace.
+
+```java
+// Příklad: Získání 2 nejmenších prvků
+JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(4, 2, 3, 1));
+List<Integer> smallestTwo = rdd.takeOrdered(2); // Výsledek: [1, 2]
+
+// Příklad s vlastním pořadím (sestupně)
+List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Výsledek: [4, 3]
+```
+
+## Shuffle Operace
+
+- nektere akce spousti shuffle
+- shuffle = mechanismus pro redistribuci dat pres partitions
+- nutnost kopirovani dat mezi executory a stroji
+
+### Priklad Shuffle Operace: ReduceByKey
+
+- Problém: Hodnoty stejného klíče mohou být v různých partitions nebo na různých strojích v clusteru
+- Řešení (Shuffle): Spark načte hodnoty stejného klíče ze všech paritions, spojí je dohromady a spočítá finální výsledek
+
+## RDD vs DataFrame vs Dataset
+
+- RDD = primarni API ve Sparku, neobsahuje optimaliyace jako DataFrame nebo Dataset
+- DataFrame = data jsou organizovana do pojmenovanych sloupcu
+  - Weak typing: `Dataset<Row>`
+  - Kolekce generických objektů
+  - Jednodussi prace s daty (jako tabulka v SQL)
+- Dataset = distribuovana kolekce dat
+  - Strong typing: `Dataset<T>`, kde `T` je definice tridy
+  - Neco jako RDD s podporou Spark SQL zaroven
+
+> Spark 2.0 sjednotil DataFrame a Dataset do jedné struktury s dvěma API:
+
+> Nepřísně typované API (DataFrame): Pro jednoduchost a SQL-like operace.
+> Silně typované API (Dataset): Pro typovou bezpečnost a práci s konkrétními třídami.
+
+![alt](./images/spark_api.png)
