@@ -648,3 +648,208 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 > Silně typované API (Dataset): Pro typovou bezpečnost a práci s konkrétními třídami.
 
 ![alt](./images/spark_api.png)
+
+# Principy MDBS
+
+- vzdáme se něketerých ACID vlastností
+- Ze silné konzistence -> slabá konzistence
+
+## Scalability
+
+### Vertikalni scaling (scaling up)
+
+- v historii preferovano
+- zarucovalo strong consistency (protoze stacil jen jeden stroj)
+- Vendor lock-in
+- drahe
+- stale existuje limit pro silu a kapacitu jednoho stroje
+
+### Horizontalni scaling (scaling out)
+
+- system distribuujeme pres vice stroju / uzlu
+- staci komoditni hardware
+
+### Klamy (fallacies) horizontalniho scalingu
+
+- Sit je spolehliva
+- Nulova letence
+- Nekonecny bandwidth
+- Sit je bezpecna
+- Topologie se nemeni
+- Mame pouze jednoho spravce
+- Nulova cena transportu
+- Sit je homogenni
+
+## ACID
+
+- typicke vlastnosti ocekavane u relacnich DBMS
+- Databzova transakce = jednotka prace (sekvence operaci) v DBMS
+- tyto vlastnosti jsou ale prilis drahe v distribuovanych systemech
+- Atomicity - vse nebo nic, jedna selhana cast transakce = cela transakce selhala
+- Consistency - databaze se presouva pouze mezi konzistentnimi stavy
+- Isolation - efekty nedokonceene transakce (v prubehu, failed) nejsou viditelne zvenku
+- Durability - po commitu transakce zustane transkace commited (i pres vypadek elektriny, errory)
+
+## CAP Theorem
+
+- CAP ma 3 casti
+- Obecne ale nedava smysl, protoze definice nejsou dostatecne presne (napr. pouze CP by naznacovalo nikdy available)
+
+**Theorem:** `Only 2 of the 3 guarantees can be given in a “shared-data” system`
+
+![alt](./images/cap_theorem.png)
+
+### Consistency
+
+- po zmene dat, vsechny cteni maji videt stejna data
+- vsechny uzly maji vzdy obsahovat stejna data
+
+### Availability
+
+- vsechny dotazy (cteni, zapisy) dostanou vzdy odpoved
+- nazavisle na vypadcich
+
+### Partition Tolerance
+
+- system funguje i po izolovani podcasti systemu
+- problemy s pripojenim neshodi system pokud je system fault tolerantni
+
+## BASE
+
+- lepe skalovatelny
+- sada principu jako ACID
+
+### Basically Available
+
+- system funguje prakticky vetsinu casu
+- castecne vypadky se deji ale bez selhani celeho systemu
+
+### Soft State
+
+- system se neustale meni
+- stav systemu je nedeterministicky (kontrast vuci consistency v ACIDu, kde vzdy mame nejaky pevny stav)
+
+### Eventual Consistency
+
+- nekdy v budoucnu bude system konzistentni (az treba vsechny stroje budou synced)
+
+## ACID vs BASE
+
+- ACID garantuje _Consistency_ a _Availability_
+  - pesimisticky pristup
+  - toto dovoluje DB pouze na jednom stroji
+- BASE garantuje _Availability_ a _Partition
+  tolerance_
+  - optimisticke
+  - distribuovane databaze
+- samostatny system je `CA` system
+
+## Silna konzistence
+
+![alt](./images/strong_consistency.png)
+
+## Eventualni konzistence
+
+![alt](./images/eventual_consistency.png)
+
+# Distribucni modely
+
+- Horizontalni scaling = databaze bezi na clusteru serveru
+- Mame dva ortogonalni pristupy (= pristupy, ktere mohou byt aplikovany zaroven. Jsou v jinych dimenzich / pohledech na vec)
+  - **Replikace** - kopirovani stejnych dat pres uzly (master-slave nebo peer-to-peer)
+  - **Sharding** - jina data na jinych uzlech
+
+## Single server
+
+- bez jakekoliv distribuce
+- DB pouze na tomto stroji
+- Dobre treba pro Grafove DB -> slozita distribuce
+
+## Sharding
+
+- davame ruzna data na ruzne uzly
+- idealne chceme pohromade data, ke kterym pristupujeme casto dohromady
+- selhani uzlu -> jeho data jsou nedostupna (proto casto kombinujeme s replikaci)
+
+### Rozmisteni uzlu
+
+<ol type="A">
+  <li>Jeden uživatel bere data z jednoho serveru</li>
+  <li>Fyzická poloha</li>
+  <li>Distribuujeme rovnoměrně přes uzly</li>
+</ol>
+
+## Master-slave Replikace
+
+- jeden uzel je primarni (master), zbytek sekundarni (slaves)
+- master zodpovida za zpracovani a update dat
+- master limituje svoji schopnosti zpracovani updatu
+- Problemy:
+  - skalovatelnost zapisu (master je bottleneck)
+  - nechrani pred selhanim mastera
+
+### Volba mastera
+
+- Manualni: user-defined
+- Auomaticka: cluster-elected
+
+## Peer-to-peer replikace
+
+- resi mnoho problemu master-slave replikace
+- bez mastera
+- Problem: konzistence
+  - zapisem na 2 mista vznika write-write konflikt
+- Reseni:
+  - pri zapisu dat repliky koordinuji pro zabraneni konfliktu
+  - vsechny repliky nemusi souhlasit, staci vetsina
+
+## Kombinace Shardingu a Replikace
+
+### Master-slave replikace a sharding
+
+- vice masteru, ale master je pouze pro nejaky dany datovy item
+- uzel muze byt master pro nejaka data a slave pro jina
+
+### Peer-to-peer replikace a sharding
+
+- casta strategie pro sloupcove DB
+- idealne replikacni faktor 3, takze kazdy shard je na 3 uzlech
+
+### Konzistence
+
+#### **Write Consistency (Konzistence zápisu)**
+
+- **Problém:** Dva uživatelé chtějí upravit stejný záznam (write-write konflikt).
+- **Důsledek:**
+  - Ztracený update: Druhá transakce přepíše hodnotu z první transakce.
+  - Ostatní transakce čtou nesprávnou hodnotu a vrací špatné výsledky.
+- **Řešení:**
+  - **Pesimistické:** Zabraňuje konfliktům (např. write lock).
+  - **Optimistické:** Konflikty se nechají proběhnout, ale následně se detekují a řeší (např. podmíněný update nebo uložení obou hodnot jako konflikt).
+
+#### **Read Consistency (Konzistence čtení)**
+
+- **Problém:** Jeden uživatel čte, zatímco druhý zapisuje (read-write konflikt).
+- **Důsledek:**
+  - Nekonzistentní čtení: Hodnota objektu se mezi dvěma čteními změní.
+  - Transakce, které čtou starou hodnotu, mohou vracet chybné výsledky.
+- **Databáze:**
+  - **Relační databáze:** Podporují ACID transakce (zajišťují konzistenci).
+  - **NoSQL databáze:** Často podporují atomické operace jen v rámci jedné "agregace".
+    - Pokud je update napříč více agregacemi, může dojít k **oknu nekonzistence**.
+- **Další problém:** Konzistence replikace
+  - Zajistit, aby všechny repliky měly stejnou hodnotu při čtení.
+
+#### **Quorums (Kvóra)**
+
+- **Otázka:** Kolik uzlů je potřeba zapojit pro zajištění silné konzistence?
+- **Write quorum:** Počet uzlů potvrzujících zápis musí být:
+  - \( W > \frac{N}{2} \)
+    - \( N \) = počet uzlů v replikaci (replikační faktor).
+    - \( W \) = počet uzlů zapojených do zápisu.
+- **Read quorum:** Počet uzlů nutných pro čtení:
+  - \( R + W > N \)
+    - \( R \) = počet uzlů kontaktovaných pro čtení.
+- **Princip:**
+  - Zápisy s konflikty: Pouze jeden může získat většinu.
+  - Pro zajištění aktuální hodnoty musíme kontaktovat dostatečný počet uzlů.
