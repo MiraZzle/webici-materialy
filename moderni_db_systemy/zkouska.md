@@ -2,9 +2,26 @@
 
 [**Stránky předmětu**](https://www.ksi.mff.cuni.cz/~holubova/NDBI040/)
 
+## Osnova
+
+- [Vrstvy databázových modelů](#vrstvy-databázových-modelů)
+- [Big Data](#big-data)
+  - [Definice](#definice-podle-gartneru---společnost-pro-it-analýzy-a-poradenství)
+  - [Zdroje Big Data](#zdroje-big-data)
+  - [Hlavní charakteristiky Big Data](#hlavní-charakteristiky-big-data)
+  - [Zpracování Big Data](#zpracování-big-data)
+- [Výhody NoSQL databází](#výhody-nosql-databází)
+- [MapReduce](#mapreduce)
+- [Apache Spark](#apache-spark)
+  - [RDD operace](#rdd-operace)
+    - [Transformace](#rdd-transformace)
+    - [Akce](#rdd-akce)
+- [Distribuční modely](#distribucni-modely)
+- [Cloud computing](#cloud-computing)
+
 ---
 
-## **Vrstvy databázových modelů**
+# **Vrstvy databázových modelů**
 
 ### **Konceptuální vrstva**
 
@@ -844,12 +861,52 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 
 - **Otázka:** Kolik uzlů je potřeba zapojit pro zajištění silné konzistence?
 - **Write quorum:** Počet uzlů potvrzujících zápis musí být:
-  - \( W > \frac{N}{2} \)
-    - \( N \) = počet uzlů v replikaci (replikační faktor).
-    - \( W \) = počet uzlů zapojených do zápisu.
+  $$ W > \frac{N}{2} $$
+
+  - \( N \) = počet uzlů v replikaci (replikační faktor).
+  - \( W \) = počet uzlů zapojených do zápisu.
+
 - **Read quorum:** Počet uzlů nutných pro čtení:
-  - \( R + W > N \)
-    - \( R \) = počet uzlů kontaktovaných pro čtení.
+  $$ R + W > N $$
+  - \( R \) = počet uzlů kontaktovaných pro čtení.
 - **Princip:**
   - Zápisy s konflikty: Pouze jeden může získat většinu.
   - Pro zajištění aktuální hodnoty musíme kontaktovat dostatečný počet uzlů.
+
+# Zpracovani Big Data
+
+## Priklady ukolu pro Big Data
+
+- analyza
+- visualizace
+- agregace
+- manipulace a uprava dat
+
+## Cloud computing
+
+- Pronajem hw/sw (servery, data, software...) poptavce
+- [Virtualizace a cloud computing předmět](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NSWI150)
+
+### Modely cloudových služeb:
+
+- **Software as a Service (SaaS):**
+
+  - Primo hotovy sw produkt
+  - zoom, shopify, slack
+
+- **Platform as a Service (PaaS):**
+
+  - Prostredi pro devs pro nasazeni a vyvoj vcetne HW
+  - Nastavena DB, security, data security, hosting
+  - Microsoft Azure, AWS Lambda
+
+- **Infrastructure as a Service (IaaS):**
+  - primo hw a infrastruktura (nejnizsi model)
+
+![alt](./images/cloud_models.png)
+
+### Spojeni Cloud computingu a Big Data
+
+- nemusime resit drahy HW, instalaci a udrzbu
+- jednoducha skalovatelnost
+- nevyhoda je vendor lock-in
