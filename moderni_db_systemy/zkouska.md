@@ -910,3 +910,488 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 - nemusime resit drahy HW, instalaci a udrzbu
 - jednoducha skalovatelnost
 - nevyhoda je vendor lock-in
+
+# Key-value databaze
+
+- prakticky hash table
+- hodnota je BLOB (nespecifikovany typ a struktura - muze byt cokoliv)
+
+## Priklady
+
+- Riak
+- Redis
+- MemcachedDB
+
+## Vhodna vyuziti
+
+- ### Session info
+  - klicem je `session_id`
+  - k ulozeni session staci `put` a pro dotaz jednoduchy `get`
+- ### Nakupni kosiky
+  - podobne jako Session info
+- ### User preference
+
+## Nevhodna vyuziti
+
+- ### Vztahy mezi daty
+- ### Transakce s vice operacemi
+  - Ukladame vice klicu -> jedno selhani -> zadny z klicu v transakci se neulozi (revert / roll back)
+- ### Dotazy na obsah dat
+
+## Dotazovani
+
+- dotazujeme se pomoci klice
+- pomoci obsahu dat neni mozne (BLOB -> data nemusi byt jakkoliv definovana)
+- klice jsou generovany nejakym algoritmem (auto incremenet), user generated nebo treba time stamps
+
+# Riak (Key-value)
+
+- open source
+
+## Terminologie
+
+- ### `bucket` = namespace pro klice
+  - lze pro bucket nastavit replikacni faktor `n_val`
+  - `allow_mult` - konkurentni updaty
+  - `/riak/<bucket>/<key>`
+- ### `ring`
+- ### `hinted handoff`
+- ### `gossiping`
+
+## Principy
+
+- klice jsou ukladany do bucketů (= namespaces)
+- default interface je `HTTP`
+
+## Riak Links
+
+- umoznuji tvorit vztahy mezi objekty
+- tvori se pridanim `Link` headeru k objektu (pres HTTP)
+
+## Riak Search
+
+- fulltext search engine
+- podpora dotazovani na textova data
+- pouziti pro hledani zaznamu podle obsahu
+
+### Dotazování v Riak Search
+
+- **Typy dotazů:**
+  - **Zástupné znaky:** `Bus*`, `Bus?`
+  - **Rozsahy:**
+    - `[red TO rum]`: zahrnuje "red", "rum" a všechny mezi nimi
+    - `{red TO rum}`: zahrnuje pouze slova mezi "red" a "rum"
+  - **Logické operátory:** `(red OR blue) AND NOT yellow`
+  - **Prefixové shody:** Vyhledávání podle počátečních písmen
+  - **Blízkost:**
+    - `"See spot run"~20`: slova v rámci 20 slov
+
+### Proces indexace dat v Riak Search:
+
+1. Načtení dokumentu
+2. Rozdělení na pole
+3. Rozdělení polí na termíny
+4. Normalizace termínů
+5. Zápis `{Field, Term, DocumentID}` do indexu
+
+**Indexování:**
+
+```
+index <INDEX> <PATH>
+```
+
+**Vyhledávání:**
+
+```
+search <INDEX> <QUERY>
+```
+
+## Priklady Riaku
+
+### **Příklady použití Riaku**
+
+#### **Práce s Buckets:**
+
+1. **Seznam všech buckets:**
+
+   ```bash
+   curl http://localhost:10011/riak?buckets=true
+   ```
+
+2. **Získání vlastností bucketu `foo`:**
+
+   ```bash
+   curl http://localhost:10011/riak/foo/
+   ```
+
+3. **Změna vlastností bucketu `foo`:**
+   ```bash
+   curl -X PUT http://localhost:10011/riak/foo -H "Content-Type: application/json" -d '{"props" : { "n_val" : 2 } }'
+   ```
+
+---
+
+#### **Práce s daty:**
+
+1. **Uložení prostého textu do bucketu `foo`:**
+
+   ```bash
+   curl -i -H "Content-Type: plain/text" -d "My text" http://localhost:10011/riak/foo/
+   ```
+
+2. **Uložení JSON souboru do bucketu `artists` s klíčem `Bruce`:**
+
+   ```bash
+   curl -i -H "Content-Type: application/json" -d '{"name":"Bruce"}' http://localhost:10011/riak/artists/Bruce
+   ```
+
+3. **Získání objektu:**
+
+   ```bash
+   curl http://localhost:10011/riak/artists/Bruce
+   ```
+
+4. **Aktualizace objektu:**
+
+   ```bash
+   curl -i -X PUT -H "Content-Type: application/json" -d '{"name":"Bruce", "nickname":"The Boss"}' http://localhost:10011/riak/artists/Bruce
+   ```
+
+5. **Smazání objektu:**
+   ```bash
+   curl -i -X DELETE http://localhost:10011/riak/artists/Bruce
+   ```
+
+---
+
+#### **Práce s Riak Links:**
+
+1. **Přidání alba a propojení s performerem:**
+
+   ```bash
+   curl -H "Content-Type: text/plain" -H 'Link: </riak/artists/Bruce>; riaktag="performer"' -d "The River" http://localhost:10011/riak/albums/TheRiver
+   ```
+
+2. **Najít umělce, který provedl album `The River`:**
+
+   ```bash
+   curl -i http://localhost:10011/riak/albums/TheRiver/artists,performer,1
+   ```
+
+3. **Najít umělce, kteří spolupracovali s tím, kdo provedl `The River`:**
+   ```bash
+   curl -i http://localhost:10011/riak/albums/TheRiver/artists,_,0/artists,collaborator,1
+   ```
+
+## Interni mechanismy Riaku
+
+- `BASE` principy
+- pouziva `quora`
+
+  - `N` = replikacni faktor (default = `3`)
+  - Zapis: data musi byt zapsana aspon na `W` uzlech
+  - Cteni: data musi byt nalezena aspon na `R` uzlech
+  - `W` a `R` muzeme nastavit pro kazdou operaci
+
+- Plati tyto nerovnosti:
+  $$ W > \frac{N}{2} $$
+  $$ R + W > N $$
+
+- **Příklad:**
+  - Cluster Riaku má:
+    - **`N = 5`** (počet replik)
+    - **`W = 3`** (minimální počet uzlů pro potvrzení zápisu)
+  - **Zápis je úspěšný, pokud**:
+    - Data jsou úspěšně zapsána na více než `3` uzlech
+  - **Tolerované výpadky při zápisu:**
+    - Cluster zvládne výpadek až **`N - W = 2`** uzlů a stále může provádět zápisy
+
+## Clustering v Riaku
+
+- bez mastera -> kazdy uzel muze obslouzit jakykoliv dotaz
+
+- ### Konzistentni hashovani
+
+  - hashovaci funkce mapuje klice do kruhu
+  - kazdy uzel zodpovedny za interval hashu (= `slot`) na kruhu
+  - prumerne remapujeme jen `k / n` klicu, kde `k` = pocet klicu a `n` = pocet slotu
+
+## Riak Ring
+
+- stred kazdeho clusteru
+- `160-bitovy` prostor celych cisel rozdeleny na rovnomerne intervaly
+- ### Kazdy `fyzicky uzel` ma `virtualni uzly` (= vnodes)
+
+  - virtualni uzel je zodpovedny za cast klicu
+  - kazdy fyzicky uzel ma na starost `1/ (pocet fyzickych uzlu)` ringu
+  - #### Pocet vnodes na kazdem uzlu:
+
+$$
+\text{|vnodes\_na\_1\_uzlu|} = \frac{|partitions|}{\text{|fyzicke\_uzly|}}
+$$
+
+- ### Priklad:
+  - Ring s `32` paritions
+  - `4` fyzicke uzly
+  - `8` vnodes na fyzicky uzel
+
+![alt text](./images/riak_ring_e1.png)
+
+## Replikace v Riaku
+
+- nastavujeme `N value` (default = 3)
+- objekty dedi `N value` z jejich bucketu
+
+### Hinted kandoff
+
+- resi selhani uzlu
+- funguje diky replikaci
+- Zajistuje high availability Riaku
+
+1. **Selhání uzlu:** Pokud uzel v klastru selže, sousední uzly dočasně převezmou jeho úlohu.
+2. **Dočasné převzetí:** Sousední uzly zpracovávají čtení a zápisy, aby zajistily dostupnost systému.
+3. **Obnova:** Po návratu selhaného uzlu sousední uzly předají všechny mezitímní změny zpět.
+
+**Výhoda:** Systém zůstává dostupný a data nejsou ztracena.
+
+![alt](./images/hinted_handoff.png)
+
+## Gossip protokol
+
+- robustni sireni informaci
+- `Gossiping` = posilani informaci nahodnemu uzlu
+  - aktualizuje info a clusteru
+- kazdy uzel gossipuje
+  - periodicky
+  - pri zmene na ringu
+
+## Vector clocks
+
+- kazdy uzel muze zpracovavat dotaz -> jaka verze hodnoty je ale aktualni?
+- reseni: vector clocks
+- kazda ulozena hodnota je tagged vector clockem
+- ulozeno v headeru objektu
+- pri kazdem updatu je hodnota vector clocku aktualizovana
+
+## Riak siblings
+
+- `siblings` = vicero objektu pod jednim klicem
+- aktivovano `allow_mult = true` priznakem
+- mohou vzniknout pri konkurentnim zapisu, starych vector clocks, neexistujicich vector clocks
+
+## Koordinující uzel (vnode) v Riaku
+
+1. Najde **vnode** pro klíč pomocí hashovací funkce.
+2. Určí další **N-1 vnodes** pro repliky.
+3. Odešle požadavek na všechny vybrané **vnodes**.
+4. Čeká, dokud dostatečný počet odpovědí nesplní **kvórum** (pro čtení/zápis).
+5. Vrátí výsledek klientovi.
+
+# Redis (Key-value + multi-model)
+
+- spise dokumentova multi-model databaze s podporou key-value
+
+## Terminologie
+
+## Principy
+
+- klice jsou `binary safe` -> jakakoliv bina rni posloupnost muze byt klicem (tedy neni omezeni na text nebo citelny obsah)
+- hodnota muze byt jakykoliv objekt (string, hash, list, set...)
+- podpora pro mnozinove operace (range, diff, union, intersection)
+
+### In-Memory Data Set
+
+- data jsou primarne ulozena v pameti
+- persistence je resena dumpingem datasetu na disk / pridanim prikazu do logu
+
+### Publish/subscribe
+
+### Cache-like chovani
+
+- klice mohou mit nastaveny `TTL`
+- pak jsou automaticky vymazany -> cache charackteristika
+
+## Datove typy Redisu
+
+### **String**
+
+- **Binary safe:** Klíč může obsahovat libovolnou binární sekvenci.
+- **Maximální velikost:** 512 MB.
+- **Operace:**
+  - Nastavení a načtení: `SET`, `GET`.
+  - Modifikace: `APPEND`, `STRLEN`, `SETRANGE`.
+  - Operace s čísly: `INCR`, `DECR`, `INCRBY`, `DECRBY`.
+  - Bitové operace: `GETBIT`, `SETBIT`, `BITCOUNT`.
+
+**Příklad:**
+
+```plaintext
+> SET count 10
+OK
+> INCR count
+(integer) 11
+> GET count
+"11"
+> DEL count
+(integer) 1
+```
+
+---
+
+### **List**
+
+- **Seřazený seznam řetězců:** Prvky jsou uspořádány podle pořadí vložení.
+- **Maximální délka:** Více než 4 miliardy prvků.
+- **Operace:**
+  - Přidání: `LPUSH` (hlava), `RPUSH` (konec), `LINSERT`.
+  - Odebrání: `LPOP`, `RPOP`, `LREM`.
+  - Přístup k prvkům: `LRANGE`, `LINDEX`.
+  - Délka seznamu: `LLEN`.
+
+**Příklad:**
+
+```plaintext
+> LPUSH animals cat
+(integer) 1
+> RPUSH animals dog
+(integer) 2
+> LRANGE animals 0 -1
+1) "cat"
+2) "dog"
+```
+
+---
+
+### **Set**
+
+- **Neuspořádaná kolekce unikátních řetězců.**
+- **Maximální velikost:** Více než 4 miliardy prvků.
+- **Operace:**
+  - Přidání/Odebrání: `SADD`, `SREM`.
+  - Test členství: `SISMEMBER`.
+  - Množinové operace: `SUNION`, `SINTER`, `SDIFF`.
+
+**Příklad:**
+
+```plaintext
+> SADD colors red green blue
+(integer) 3
+> SINTER colors:1 colors:2
+1) "green"
+```
+
+---
+
+### **Sorted Set**
+
+- **Seřazená kolekce s hodnotami přiřazenými skóre.**
+- **Operace:**
+  - Přidání/Odebrání: `ZADD`, `ZREM`.
+  - Počítání: `ZCARD`, `ZCOUNT`.
+  - Získání prvků podle skóre: `ZRANGEBYSCORE`.
+
+**Příklad:**
+
+```plaintext
+> ZADD scores 10 Anna 20 John
+(integer) 2
+> ZRANGE scores 0 -1
+1) "Anna"
+2) "John"
+```
+
+---
+
+### **Hash**
+
+- **Mapa mezi poli a hodnotami řetězců.**
+- **Operace:**
+  - Nastavení/Načtení: `HSET`, `HGET`, `HMSET`.
+  - Všechny hodnoty/pole: `HGETALL`, `HKEYS`, `HVALS`.
+  - Smazání: `HDEL`.
+
+**Příklad:**
+
+```plaintext
+> HSET user:id name Sara age 25
+(integer) 1
+> HGET user:id name
+"Sara"
+> HGETALL user:id
+1) "name"
+2) "Sara"
+3) "age"
+4) "25"
+```
+
+## Transakce v Redisu
+
+- kazdy prikaz je atomicky
+- podporuje transakce pri pouziti vice prikazu (zachova poradi) -> vse v jedne atomicke operaci
+- bez roll backu
+
+```plaintext
+> MULTI // start definice transakce
+OK
+> INCR foo
+QUEUED
+> INCR bar
+QUEUED
+> EXEC // provedeni transakce
+1) (integer) 1
+2) (integer) 1
+```
+
+## Replikace v Redisu (master-slave)
+
+- master-slave
+  - master ma vice slavu
+  - uzel muze byt master a slave zaroven
+- replikace je `neblokujici` na strane `mastera`
+  - pri syncu slavu master pracuje dal
+- replikace je `neblokujici` na strane `slavu`
+- pri syncu slavu slave pracuje dal
+
+## Synchronizace v Redisu
+
+1. Po připojení k masteru slave odešle příkaz **SYNC**.
+2. Master spustí **background saving** a začne ukládat nové příkazy do bufferu.
+3. Po dokončení uložení master přenese celý soubor databáze na slave.
+4. Slave uloží soubor na disk a načte jej do paměti.
+5. Master pošle slave také všechny **bufferované příkazy**.
+
+## Sharding v Redisu
+
+### Redis Cluster (od verze 3.1)
+
+- **Nepoužívá konzistentní hashování.**
+- Klíče jsou přiřazeny do **16384 hash slotů** (CRC16 klíče modulo 16384).
+- **Každý master uzel spravuje subset hash slotů.**
+
+**Příklad:**
+
+- 3 uzly:
+  - **Node A:** Hash sloty 0–5500
+  - **Node B:** Hash sloty 5501–11000
+  - **Node C:** Hash sloty 11001–16383
+- Přidání uzlu **D:** Některé sloty z A, B, C se přesunou na D.
+- Odebrání uzlu **A:** Jeho sloty se přesunou na B a C.
+
+**Bez přerušení provozu:** Přesun hash slotů probíhá bez nutnosti zastavit systém.
+
+## Redis sentinel
+
+- system pro managing Redis instanci
+- monitorovani, notifikace, automaticky failover
+
+# Sloupcove databaze
+
+# Dokumentove databaze
+
+# Grafove databaze
+
+# Multimodel databaze
+
+# Polystores
+
+# Advanced
