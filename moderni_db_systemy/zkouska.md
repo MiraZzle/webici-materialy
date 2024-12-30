@@ -958,6 +958,8 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 - ### `hinted handoff`
 - ### `gossiping`
 
+![alt](./images/riak_terminology.png)
+
 ## Principy
 
 - klice jsou ukladany do bucketů (= namespaces)
@@ -1385,6 +1387,659 @@ QUEUED
 - monitorovani, notifikace, automaticky failover
 
 # Sloupcove databaze
+
+- "column-oriented" je neco jineho
+
+## Terminologie
+
+- `column family` = neco jako `table` v relacnich = radky s mnoha sloupci asociovane s `row key`
+- data uchovava jako sloupce
+  - datove zaznamy jsou mapovany na rowIDs
+    ```
+    10:001,12:002,11:003,22:004;
+    Smith:001,Jones:002,Johnson:003,Jones:004;
+    ```
+
+![alt](./images/column_family.png)
+
+## Vhodna vyuziti
+
+- ### Event logging
+
+- ### CMS, Blogy
+
+## Nevhodna vyuziti
+
+- ### Systemy vyzadujici ACID vlastnosti
+
+- ### Agregovani dat v dotazech
+
+# Cassandra (sloupcove)
+
+- Vyvinuta ve FB
+- Ma vlastni query jazyk `CQL`
+
+## Terminologie
+
+- ### Column = zakladni jednotka
+
+  - Name + value + timestamp
+  - `name` je klic
+  - `value` muze byt prazdna
+  - indexace podle jmena a primary indexu = `row key`
+  - Typy:
+  - **Expiring** - nastaveny `TTL`
+  - **Counter** - cislo inkremtenujici pri nejake udalosti
+  - **Super** - seskupeni vice sloupcu pod jednou hodnotou -> dalsi uroven hierarchie
+
+    - Priklad Super sloupce:
+
+    | Row Key (Customer ID) | Super Column (Order ID) | Columns (Order Details)          |
+    | --------------------- | ----------------------- | -------------------------------- |
+    | `123`                 | `Order_001`             | `date: 2024-12-01`, `total: $50` |
+    |                       | `Order_002`             | `date: 2024-12-05`, `total: $75` |
+    | `456`                 | `Order_001`             | `date: 2024-11-30`, `total: $30` |
+
+- ### Row = kolekce sloupcu spojenych ke klici
+- ### Column family = kolekce podobnych `rows`
+  ![alt](./images/cassandra_terminology.png)
+
+## Column families
+
+- musime specifikovat `key`
+- `Comparator` = datovy typ pro jmenou sloupce
+- `Validator` = datovy typ pro hodnotu sloupce
+
+### Staticke
+
+- jako tabulka v relacni db
+- vsechny radky maji stejnou sadu sloupcu
+- povolujeme null -> kazdy sloupec nemusi mit hodnotu
+
+### Dynamicke
+
+- dynamicky generovane sloupce
+- ulozena v jednom radku pro efektivni ziskani dat
+- v tomto kontextu je `row` neco jako snapshost dat / materialiaovany `view` -> efektivnejsi
+
+## Typy kolekci v CQL
+
+- `set` - mnozina -> jedinecne hodnoty, vraci v abecednim poradi
+- `list` -> serazene a vraci podle indexu
+- `map` -> name + value pary
+
+## CQL - Cassandra query language
+
+### **1. Operace s Keyspace**
+
+#### **Vytvoření keyspace**
+
+```sql
+CREATE KEYSPACE Excelsior
+WITH replication = {
+  'class': 'SimpleStrategy',
+  'replication_factor': 3
+};
+```
+
+- Definuje **keyspace** s replikací typu `SimpleStrategy` a faktorem replikace `3`.
+
+---
+
+#### **Použití keyspace**
+
+```sql
+USE Excelsior;
+```
+
+- Nastaví `Excelsior` jako aktuálně používaný keyspace.
+
+---
+
+#### **Úprava keyspace**
+
+```sql
+ALTER KEYSPACE Excelsior
+WITH replication = {
+  'class': 'SimpleStrategy',
+  'replication_factor': 4
+};
+```
+
+- Změní faktor replikace u existujícího keyspace.
+
+---
+
+#### **Odstranění keyspace**
+
+```sql
+DROP KEYSPACE Excelsior;
+```
+
+- Smaže keyspace a všechna data v něm.
+
+---
+
+### **2. Operace s tabulkami**
+
+#### **Vytvoření tabulky s primárním klíčem**
+
+```sql
+CREATE TABLE timeline (
+  userid uuid,
+  posted_month int,
+  posted_time uuid,
+  body text,
+  posted_by text,
+  PRIMARY KEY (userid, posted_month, posted_time)
+) WITH compaction = { 'class': 'LeveledCompactionStrategy' };
+```
+
+- **Primární klíč:**
+  - `userid` je **partition key** (hlavní klíč, který určuje rozdělení dat mezi uzly).
+  - `posted_month` a `posted_time` jsou **clustering columns** (určují pořadí dat uvnitř partice).
+- **Strategie komprese:** Nastavena na `LeveledCompactionStrategy`.
+
+---
+
+#### **Smazání tabulky**
+
+```sql
+DROP TABLE timeline;
+```
+
+- Smaže tabulku a všechna její data.
+
+---
+
+#### **Vymazání dat z tabulky**
+
+```sql
+TRUNCATE timeline;
+```
+
+- Odstraní všechna data z tabulky, ale zachová její strukturu.
+
+---
+
+#### **Vytvoření indexu**
+
+```sql
+CREATE INDEX userIndex ON timeline (posted_by);
+```
+
+- Vytvoří sekundární index na sloupci `posted_by` pro efektivní dotazování mimo primární klíč.
+
+---
+
+#### **Smazání indexu**
+
+```sql
+DROP INDEX userIndex;
+```
+
+- Smaže vytvořený index.
+
+---
+
+### **3. Expirace dat v tabulce**
+
+#### **Vytvoření tabulky**
+
+```sql
+CREATE TABLE excelsior.clicks (
+  userid uuid,
+  url text,
+  date timestamp,
+  name text,
+  PRIMARY KEY (userid, url)
+);
+```
+
+#### **Vložení dat s TTL (Time-To-Live)**
+
+```sql
+INSERT INTO excelsior.clicks (userid, url, date, name)
+VALUES (
+  3715e600-2eb0-11e2-81c1-0800200c9a66,
+  'http://apache.org',
+  '2013-10-09',
+  'Mary'
+) USING TTL 86400;
+```
+
+- Data budou automaticky smazána po 86,400 sekundách (1 den).
+
+#### **Zjištění zbývající doby života dat**
+
+```sql
+SELECT TTL(name) FROM excelsior.clicks
+WHERE url = 'http://apache.org' ALLOW FILTERING;
+```
+
+- Určuje, kolik času zbývá, než data vyprší.
+
+---
+
+### **4. Práce s kolekcemi**
+
+#### **Set (množina)**
+
+```sql
+CREATE TABLE users (
+  user_id text PRIMARY KEY,
+  first_name text,
+  last_name text,
+  emails set<text>
+);
+
+INSERT INTO users (user_id, first_name, last_name, emails)
+VALUES ('frodo', 'Frodo', 'Baggins', {'f@baggins.com', 'baggins@gmail.com'});
+
+UPDATE users SET emails = emails + {'fb@friendsofmordor.org'}
+WHERE user_id = 'frodo';
+
+SELECT user_id, emails FROM users WHERE user_id = 'frodo';
+
+UPDATE users SET emails = emails - {'fb@friendsofmordor.org'}
+WHERE user_id = 'frodo';
+
+UPDATE users SET emails = {} WHERE user_id = 'frodo';
+```
+
+- **Set** ukládá jedinečné hodnoty.
+- Přidávání: `+`.
+- Odebírání: `-`.
+- Vymazání všech hodnot: nastavení na `{}`.
+
+---
+
+#### **List (seznam)**
+
+```sql
+ALTER TABLE users ADD top_places list<text>;
+
+UPDATE users SET top_places = ['rivendell', 'rohan']
+WHERE user_id = 'frodo';
+
+UPDATE users SET top_places = ['the shire'] + top_places
+WHERE user_id = 'frodo';
+
+UPDATE users SET top_places = top_places + ['mordor']
+WHERE user_id = 'frodo';
+
+UPDATE users SET top_places[2] = 'riddermark'
+WHERE user_id = 'frodo';
+
+DELETE top_places[3] FROM users WHERE user_id = 'frodo';
+
+UPDATE users SET top_places = top_places - ['riddermark']
+WHERE user_id = 'frodo';
+```
+
+- **List** je uspořádaný seznam hodnot.
+- Přidávání na začátek: `['value'] + list`.
+- Přidávání na konec: `list + ['value']`.
+- Přepis hodnoty podle indexu: `top_places[index]`.
+
+---
+
+#### **Map (mapa)**
+
+```sql
+ALTER TABLE users ADD todo map<timestamp, text>;
+
+UPDATE users SET todo = {
+  '2012-9-24': 'enter mordor',
+  '2012-10-2 12:00': 'throw ring into mount doom'
+}
+WHERE user_id = 'frodo';
+
+UPDATE users SET todo['2012-10-2 12:00'] =
+'throw my precious into mount doom'
+WHERE user_id = 'frodo';
+
+DELETE todo['2012-9-24'] FROM users WHERE user_id = 'frodo';
+```
+
+- **Map** ukládá páry klíč-hodnota.
+- Přidávání/aktualizace hodnot: `todo['key'] = 'value'`.
+- Smazání hodnoty podle klíče: `DELETE todo['key']`.
+
+## **Dotazy v Cassandře**
+
+- Cassandra nepodporuje **joins** ani složité podmínky.
+- Dotazy jsou optimalizované pro rychlé čtení jednoduchých dat.
+- **Primární klíč** hraje klíčovou roli při určování výkonu dotazů.
+
+---
+
+### **1. Základní SELECT dotaz**
+
+```sql
+SELECT * FROM users
+WHERE firstname = 'Jane' AND lastname = 'Smith'
+ALLOW FILTERING;
+```
+
+- Používá **WHERE** pro filtrování výsledků.
+- **ALLOW FILTERING** umožňuje filtrovat výsledky mimo primární klíč, ale může mít negativní dopad na výkon.
+
+---
+
+### **2. Filtrování (WHERE)**
+
+```sql
+SELECT * FROM emp
+WHERE empID IN (130, 104);
+```
+
+- **IN** umožňuje vybírat více hodnot.
+
+---
+
+### **3. Řazení (ORDER BY)**
+
+```sql
+SELECT * FROM emp
+WHERE deptID = 10
+ORDER BY empID DESC;
+```
+
+- Řazení lze použít pouze u **clustering columns**.
+- Směr řazení: `ASC` (výchozí) nebo `DESC`.
+
+---
+
+### **4. Syntaxe SELECT dotazů**
+
+```sql
+SELECT select_expression
+FROM keyspace_name.table_name
+WHERE relation AND relation ...
+GROUP BY columns
+ORDER BY clustering_key (ASC | DESC)
+LIMIT n
+ALLOW FILTERING;
+```
+
+- **`select_expression`**:
+  - Výběr sloupců (např. `firstname, lastname`).
+  - **DISTINCT**: Používá se pro jedinečné hodnoty v rámci partice.
+  - **COUNT**: Spočítá řádky.
+  - **Aliases**: Pomocí `AS` lze přejmenovat sloupce.
+  - **TTL(column_name)**: Ukáže zbývající čas života hodnoty.
+  - **WRITETIME(column_name)**: Zobrazí čas posledního zápisu hodnoty.
+
+---
+
+### **5. Podmínky (relation)**
+
+- Základní podmínky:
+  ```sql
+  column_name ( = | < | > | <= | >= ) value
+  ```
+- Použití seznamů:
+  ```sql
+  column_name IN (value1, value2, ...)
+  ```
+- Použití **TOKEN**:
+  ```sql
+  TOKEN(column_name) ( = | < | > | <= | >= )
+  ```
+
+---
+
+### **6. GROUP BY**
+
+```sql
+SELECT country, COUNT(*)
+FROM users
+GROUP BY country;
+```
+
+- **Skupinování řádků** podle sloupců.
+- Povolené pouze pro sloupce obsažené v **primárním klíči**.
+- Použitelné agregační funkce:
+  - **COUNT, MIN, MAX, SUM, AVG**.
+  - Uživatel může definovat i vlastní agregační funkce.
+
+---
+
+### **7. ALLOW FILTERING**
+
+- Cassandra vyžaduje, aby dotazy byly **predikovatelné** a efektivní.
+- **ALLOW FILTERING**:
+  - Umožňuje spustit drahé dotazy, které filtrují velké množství dat.
+  - Může být kombinováno s **LIMIT** pro omezení počtu vrácených řádků.
+
+**Příklad:**
+
+```sql
+SELECT * FROM users
+WHERE birth_year = 1981
+ALLOW FILTERING;
+```
+
+- Použití filtru na sloupec, který není součástí primárního klíče.
+
+---
+
+### **8. Vytvoření indexu**
+
+```sql
+CREATE INDEX ON users(birth_year);
+```
+
+- Index umožňuje efektivní dotazování na sloupce mimo primární klíč.
+- Použití s indexem:
+
+```sql
+SELECT firstname, lastname
+FROM users
+WHERE birth_year = 1981;
+```
+
+---
+
+### **Příklady dotazů:**
+
+#### **Výběr všech uživatelů:**
+
+```sql
+SELECT * FROM users;
+```
+
+#### **Vyhledání uživatele podle primárního klíče:**
+
+```sql
+SELECT * FROM users
+WHERE username = 'frodo';
+```
+
+#### **Filtrování s řazením:**
+
+```sql
+SELECT firstname, lastname
+FROM users
+WHERE birth_year = 1981
+ORDER BY lastname ASC
+ALLOW FILTERING;
+```
+
+## Zapisy
+
+- zapis je atomicky na urovni radku
+- Memtable a SSTable jsou udrzovany pro kazdy table
+
+### Prubeh zapisu
+
+1. Pri zapisu jsou data ulozena v pameti -> `memtable`
+2. Zapis je pridan do `commit logu` na disku (durability)
+3. Memtable je flushed do `SSTable` (= sorted string table) na disku
+4. Data v commit logu jsou `purged` (= odstranena) po flushnuti jejich odpovidajicich dat z `memtable` do `SSTable`
+
+![alt](./images/cassandra_write.png)
+
+### SSTable
+
+- = Sorted string table
+- `SSTable` je immutable
+  - radek je zapsan pres vice `SSTable souboru`
+- read kombinuje fragmenty z `SSTable` a neflushnutych `Memtablu`
+- kazdy SSTable si udrzuje:
+  - `partition index` -> lokalizace dat
+  - `partition summary` -> vice rozseka
+
+### Write Request
+
+- request zpracovava jakykoliv uzel -> stava se z nej `coordinator`
+  - komunikuje mezi klientem a ostatnimi uzly s replikami
+  - posle write request vsem replikam, ktere maji radek, ktery se ma zapsat
+- `Write consistency level` = kolik replik musi uspet
+  - uspech = data jsou zapsana do commit logu a memtablu
+
+## Cteni
+
+- typy read requestu:
+  - primy read reqeust
+  - background read repair request
+
+### Prubeh cteni v Cassandre:
+
+1. **Koordinátor kontaktuje repliky podle úrovně konzistence.**
+
+   - Např. `ONE`, `QUORUM`, nebo `ALL`.
+   - Vybere nejrychleji odpovídající repliky.
+
+2. **Porovnání dat z replik.**
+
+   - Pokud jsou konzistentní, vrátí se klientovi.
+   - Pokud jsou nekonzistentní, použije se nejnovější hodnota podle **timestampu**.
+
+3. **Read Repair (oprava čtení):**
+   - Na pozadí koordinátor zkontroluje zbývající repliky.
+   - Opraví zastaralé nebo nekonzistentní repliky.
+
+## Updates
+
+- insert a update jsou stejne operace
+- neprepisuje readky -> seskupuje inserty/updaty v memtable
+- `Upsert` = insert nebo update podle toho, jestli data existuji
+  - sloupce jsou prepsany pouze pokud jsou timestamps novejsi
+  - jinak jsou updaty ukladany do noveho SSTablu
+    - pak je to margnuto na pozadi behem `compaction processu`
+
+![alt](./images/cassandra_updates.png)
+
+## **Deletes v Cassandře**
+
+- **Smazání řádku:** Odpovídá smazání všech jeho sloupců.
+- **Mazání není okamžité:**
+
+### **Tombstone**
+
+- **Definice:**
+
+  - Značka, která označuje, že sloupec nebo řádek byl smazán.
+  - Cassandra používá tombstones k opětovnému odeslání požadavku na mazání replikám, které byly při mazání nedostupné.
+
+- **Doba platnosti tombstones:**
+  - Sloupce označené tombstonem existují po **nastavitelnou dobu platnosti** (grace period).
+  - Po uplynutí této doby jsou při procesu **kompakce** (compaction) trvale odstraněny.
+  - Kompakce také slučuje více SSTables.
+
+### **Možné problémy s mazáním:**
+
+- Pokud je uzel nedostupný déle, než je nastavená grace period:
+  - Může dojít k tomu, že smazaná data se na tomto uzlu objeví znovu, protože mazání nebylo na tento uzel aplikováno.
+
+### **Řešení:**
+
+- **Pravidelná oprava uzlů (node repair):**
+  - Správci musí pravidelně spouštět opravy uzlů, aby se předešlo situacím, kdy by některé repliky měly stará data.
+
+## Compaction process
+
+- Cassandra **nevkládá/neupravuje/nesmaže data přímo na místě**:
+  - **Vkládání/úpravy:** Vytvoří novou verzi dat s časovou značkou v nové SSTable.
+  - **Mazání:** Označení dat pomocí tombstonu.
+- Compaction robíhá pravidelně, aby byla data sloučena a zoptimalizována.
+
+### Kroky Compaction
+
+1. **Sloučení dat z SSTables** podle partition key:
+
+   - Výběr nejaktuálnějších dat na základě timestampu.
+   - Synchronizace je nutná.
+   - SSTables jsou seřazené → není třeba náhodný přístup.
+
+2. **Odstranění tombstonů a smazaných dat.**
+
+3. **Konsolidace SSTables** do jednoho souboru.
+
+4. **Smazání starých SSTable souborů:**
+   - Jakmile všechny čekající čtení dokončí práci s těmito soubory.
+
+![alt](./images/compaction_process.png)
+
+## Architektura
+
+- peer-to-peer disribuovany system
+- `Coordinator` = jakykoliv uzel zodpovedny za komunikaci s klientem
+
+## Virtual Nodes
+
+- kazdy uzel muze vlastnit velke mnozstvi malych partici
+
+![alt](./images/cassandra_vnodes.png)
+
+## Gossip
+
+- bezi kazdou sekundu
+- vymena info s max 3 uzly
+- kazda `Gossip message` ma informace o zdroji a verzi
+
+### Partitioner
+
+- **Úloha:** Rozděluje data mezi uzly (včetně replik).
+- **Typy:**
+  - **Murmur3Partitioner (výchozí):** Uniformní distribuce pomocí MurmurHash (rychlá, nešifrovaná).
+  - **RandomPartitioner:** Uniformní distribuce pomocí MD5 (dřívější výchozí).
+  - **ByteOrderedPartitioner:** Řadí řádky lexikálně podle bajtů klíče, vhodné pro **ordered scans**, ale problémy s vyvažováním zátěže.
+
+## Replikace
+
+- Pokud je replikacni faktor prevysen, zapisy nejsou provadeny
+
+### **Replikace**
+
+- Pokud je replikační faktor překročen, **zápisy nejsou prováděny**.
+- typicky 2-3 repliky
+
+### **Strategie pro umístění replik**
+
+#### **1. SimpleStrategy**
+
+- **Vhodné pro jedno datové centrum.**
+- **Pravidla:**
+  1. První replika je umístěna na uzel určený partitionerem.
+  2. Další repliky jsou umístěny na následující uzly ve směru hodinových ručiček v ringu.
+- **Poznámka:** Uzel může patřit do datového centra a (volitelně) do racku.
+
+#### **2. NetworkTopologyStrategy**
+
+- **Vhodné pro více datových center.**
+- **Pravidla:**
+  1. První replika je umístěna podle partitioneru.
+  2. Další repliky jsou umístěny:
+     - **Preferenčně** na uzly v jiném racku (kvůli odolnosti proti výpadkům napájení, chlazení nebo sítě).
+     - Pokud uzel v jiném racku není k dispozici, replika se umístí na jiný uzel ve stejném racku.
+- **Počet replik na datové centrum je konfigurovatelný.**
+
+## Snitch
+
+- komponenta Cassandry informujici o sitove topologii
 
 # Dokumentove databaze
 
