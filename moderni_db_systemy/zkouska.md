@@ -2043,6 +2043,592 @@ ALLOW FILTERING;
 
 # Dokumentove databaze
 
+- hodnoty jsou ukladany jako dokumenty
+  - dokumenty = hierarchicke formaty XML, JSON apod.
+  - hodnota zaznamu = dokument
+- ocekavame podobnou strukturu dokumentu v kolekci
+
+## Vhodna vyuziti
+
+- ### Event logging
+- ### CMS, blogy
+- ### Webova analytika
+- ### E-Commerce
+
+## Nevhodna vyuziti
+
+- ### Koplexni transakce pres vice operaci
+- ### Agregovane dotazy
+
+# MongoDB (dokumentove)
+
+- pouziva JSON dokumenty
+- podpora indexace
+- mapreduce popora
+- vysoka dostupnost
+
+![alt](./images/mongodb_terminology.png)
+
+## Dokumenty v MongoDB
+
+- vyuziva JSON
+- ulozeno jako BSON - binarni JSON
+- omezeni na nazvy prvku (`_id` je rezervovano, `$` nemuze byt na zacatku, `.` nesmi byt vubec)
+
+## Datovy model
+
+- kolekce nevynucuji strukturu dat
+- dulezite rozhodnuti je zda vyuzivat reference nebo embedovat dokumenty
+
+### Reference
+
+- normalizovany datovy model
+- reference z jednoho dokumentu na dalsi
+- vice flexibility nez embedding
+- ochrana proti redundanci
+- nevyhodou je moznost vice roundtripu k serveru (follow up queries)
+
+![alt](./images/mongodb_references.png)
+
+### Embedded data
+
+- denormalizovany datovy model
+- subdokumenty
+- pribuzna data v jednom dokumentu
+- mohou velmi narustat na velikosti
+
+## **Prace s MongoDB**
+
+- **Operace:** `insert`, `update`, `delete`.
+  - **Kritéria:** Používají se pro výběr dokumentů, které se mají aktualizovat nebo odstranit.
+
+---
+
+### **Vkládání dat**
+
+- **Vložení dokumentu:**
+
+  ```javascript
+  db.inventory.insert({ _id: 10, type: "misc", item: "card", qty: 15 });
+  ```
+
+  - Vloží dokument s uživatelem definovaným `_id`.
+
+- **Upsert (vložení nebo aktualizace):**
+
+  ```javascript
+  db.inventory.update(
+    { type: "book", item: "journal" },
+    { $set: { qty: 10 } },
+    { upsert: true }
+  );
+  ```
+
+  - Pokud dokument neexistuje, vytvoří nový.
+
+- **Save (vložení nebo nahrazení):**
+  ```javascript
+  db.inventory.save({ type: "book", item: "notebook", qty: 40 });
+  ```
+
+---
+
+### **Mazání dat**
+
+- **Smazání všech odpovídajících dokumentů:**
+  ```javascript
+  db.inventory.remove({ type: "food" });
+  ```
+- **Smazání jednoho dokumentu:**
+  ```javascript
+  db.inventory.remove({ type: "food" }, 1);
+  ```
+
+---
+
+### **Aktualizace dat**
+
+- **Aktualizace více dokumentů:**
+  ```javascript
+  db.inventory.update(
+    { type: "book" },
+    { $inc: { qty: -1 } },
+    { multi: true }
+  );
+  ```
+- **Nahrazení dokumentu:**
+  ```javascript
+  db.inventory.save({ _id: 10, type: "misc", item: "placard" });
+  ```
+
+---
+
+### **Dotazy**
+
+- **Základní dotazy:**
+
+  - Všechny dokumenty:
+    ```javascript
+    db.inventory.find({});
+    ```
+  - Dokumenty, kde `type = "snacks"`:
+    ```javascript
+    db.inventory.find({ type: "snacks" });
+    ```
+  - Dokumenty s hodnotou v poli `type` buď `"food"` nebo `"snacks"`:
+    ```javascript
+    db.inventory.find({ type: { $in: ["food", "snacks"] } });
+    ```
+
+- **Logické operátory:**
+  - Dokumenty, kde `qty > 100` nebo `price < 9.95`:
+    ```javascript
+    db.inventory.find({
+      $or: [
+        { qty: { $gt: 100 } },
+        { price: { $lt: 9.95 } }
+      ]
+    });
+    ```
+
+---
+
+### **Práce s poddokumenty**
+
+- **Dotaz na přesnou strukturu poddokumentu:**
+  ```javascript
+  db.inventory.find({
+    producer: {
+      company: "ABC123",
+      address: "123 Street"
+    }
+  });
+  ```
+- **Dotaz na konkrétní pole v poddokumentu:**
+  ```javascript
+  db.inventory.find({ "producer.company": "ABC123" });
+  ```
+
+---
+
+### **Práce s poli**
+
+- **Pole s přesnou hodnotou a pořadím:**
+  ```javascript
+  db.inventory.find({ tags: ["fruit", "food", "citrus"] });
+  ```
+- **Pole obsahující prvek:**
+  ```javascript
+  db.inventory.find({ tags: "fruit" });
+  ```
+
+---
+
+### **Omezení a třídění výsledků**
+
+- **Omezení polí výsledku:**
+
+  - Pouze `item` a `qty`:
+    ```javascript
+    db.inventory.find({ type: "food" }, { item: 1, qty: 1 });
+    ```
+  - Vyloučení pole `type`:
+    ```javascript
+    db.inventory.find({ type: "food" }, { type: 0 });
+    ```
+
+- **Třídění:**
+  - Podle `age` sestupně:
+    ```javascript
+    db.collection.find().sort({ age: -1 });
+    ```
+  - Podle `last` a následně `first` vzestupně:
+    ```javascript
+    db.bios.find().sort({ "name.last": 1, "name.first": 1 });
+    ```
+
+### **Vyuziti indexu**
+
+- **Bez indexů:**
+  - MongoDB musí skenovat každý dokument v kolekci, aby našla odpovídající dokumenty.
+- **Indexy:**
+  - Ukládají část dat kolekce v snadno prohledávatelné formě.
+  - Hodnoty konkrétních polí (nebo sad polí) jsou ukládány a tříděny.
+  - Používají struktury podobné **B-stromům**.
+- **Účel:**
+  - Zrychlení běžných dotazů.
+  - Optimalizace výkonu v konkrétních situacích.
+
+---
+
+### **Použití indexů**
+
+1. **Pro tříděné výsledky:**
+
+   - MongoDB traversuje index přímo (vzestupně/sestupně), aniž by musela data třídit.
+   - Data mimo index se nekontrolují.
+
+2. **Pro pokryté výsledky:**
+   - Pokud index obsahuje všechna pole potřebná pro dotaz, MongoDB vrátí výsledky pouze z indexu, což zrychlí dotaz.
+
+## ![alt](./images/mongodb_index.png)
+
+### **Typy indexů**
+
+1. **Výchozí `_id`:**
+
+   - Automaticky vytvořený.
+   - Unikátní.
+
+2. **Jednopolní indexy:**
+
+   - Uživatelem definované na jednom poli dokumentu.
+
+   ```javascript
+   db.people.ensureIndex({ "phone-number": 1 });
+   ```
+
+3. **Složené indexy (Compound):**
+
+   - Uživatelem definované na více polích.
+
+   ```javascript
+   db.products.ensureIndex({ item: 1, category: 1, price: 1 });
+   ```
+
+4. **Multikey indexy:**
+
+   - Indexují obsah uložený v polích typu pole.
+   - Vytváří samostatné indexové záznamy pro každý prvek pole.
+
+   ```javascript
+   db.collection.ensureIndex({ "tags": 1 });
+   ```
+
+5. **Geoprostorové indexy:**
+
+   - **2d indexy:** Pro data na dvourozměrné rovině.
+   - **2sphere indexy:** Pro data reprezentující zeměpisnou délku a šířku.
+
+6. **Textové indexy:**
+
+   - Pro hledání textového obsahu v kolekci.
+
+7. **Hash indexy:**
+   - Indexuje hash hodnoty pole.
+   - Podporuje pouze rovnostní dotazy, ne rozsahové.
+
+---
+
+### **Příklady**
+
+- **Jednopolní index:**
+  ```javascript
+  db.people.ensureIndex({ "phone-number": 1 });
+  ```
+- **Složený index:**
+  ```javascript
+  db.products.ensureIndex({ item: 1, category: 1, price: 1 });
+  ```
+- **Unikátní index:**
+  ```javascript
+  db.accounts.ensureIndex({ "tax-id": 1 }, { unique: true });
+  ```
+- **Hash index:**
+  ```javascript
+  db.collection.ensureIndex({ _id: "hashed" });
+  ```
+
+## Replikace
+
+- master/slave
+- `replica set` = skupina instanci hostujici stejny dataset (kazdy ma svoji kopii)
+
+### Primarni uzel
+
+- master
+- prijima vsechny write operace
+- zapisuje do `oplogu`
+
+### Sekundarni uzly
+
+- slave
+- cte z `oplogu` mastera
+- aplikauje operace z oplogu ve stejenm poradi pro udrzeni aktualnich dat
+- muzeme ho dale nastavit:
+  - `Priority 0` - nemuze byt primary ve volbacj
+  - `Hidden` - nelze z nej cist
+  - `Delayed` - bezi na nem historicka data, napr. z duvodu recovery
+
+### **Zápis**
+
+1. MongoDB aplikuje zapisovací operace na **primární uzel** (primary).
+2. Operace jsou zaznamenány do **oplogu primárního uzlu**.
+3. Sekundární uzly (secondary members):
+   - Replikují obsah oplogu.
+   - Aplikují operace z oplogu na svá data, aby byla aktuální.
+
+---
+
+### **Čtení**
+
+1. **Všichni členové replica setu** mohou přijímat požadavky na čtení.
+2. **Výchozí chování:**
+
+   - Aplikace směruje čtení na **primární uzel**.
+   - Zaručuje, že čtení vrací nejaktuálnější verzi dokumentu.
+   - Snižuje propustnost pro čtení na sekundárních uzlech.
+
+3. **Read preference mode:**
+   - Lze nastavit, aby čtení probíhalo také ze sekundárních uzlů.
+   - Například:
+     - **primaryPreferred:** Primární uzel je preferován, ale sekundární uzly jsou použity, pokud primární není dostupný.
+     - **secondary:** Čtení probíhá pouze ze sekundárních uzlů.
+
+![alt](./images/read_preference_modes.png)
+
+## **Replica Set Elections v MongoDB**
+
+### **Principy voleb**
+
+1. **Primární uzel:**
+
+   - V replica setu může být **maximálně jeden primární uzel**.
+   - Pokud primární uzel není dostupný, proběhne volba nového primárního uzlu.
+
+2. **Trvání voleb:**
+   - Volba obvykle trvá přibližně **1 minutu**.
+   - Během této doby není k dispozici žádný primární uzel → nejsou možné zápisy.
+
+---
+
+### **Faktory ovlivňující volby**
+
+1. **Heartbeat (ping):**
+
+   - Uzel posílá heartbeat ostatním každé **2 sekundy**.
+   - Pokud odpověď nepřijde do **10 sekund**, uzel je považován za nedostupný.
+
+2. **Priority uzlů:**
+
+   - Uzel s vyšší prioritou má přednost při volbě primárního uzlu.
+   - **Priority = 0:**
+     - Uzel nemůže být primární.
+     - Nemůže zahájit volbu, ale může hlasovat.
+   - Aktuální primární uzel:
+     - Musí být v **souladu s nejnovějším oplogem** do **10 sekund**.
+   - Sekundární uzel s vyšší prioritou:
+     - Pokud dožene synchronizaci do **10 sekund**, může vyvolat volbu.
+
+3. **Spojení:**
+   - Uzel může být zvolen primárním pouze tehdy, pokud je připojen k **většině členů** replica setu.
+
+---
+
+### **Mechanismus voleb**
+
+1. **Volby se spustí, když:**
+
+   - Replica set je inicializován.
+   - Sekundární uzel ztratí kontakt s primárním.
+   - Primární uzel "ustoupí" (step down) nebo ztratí spojení s většinou členů.
+
+2. **Primární uzel se vzdá role:**
+
+   - Po obdržení příkazu `replSetStepDown`.
+   - Pokud má sekundární uzel vyšší prioritu.
+   - Pokud nemůže kontaktovat většinu členů replica setu.
+
+3. **Volba nového primárního uzlu:**
+   - Člen s **nejvyšší prioritou**, který je aktuální, se stane kandidátem.
+   - První člen, který získá **většinu hlasů**, je zvolen primárním.
+
+---
+
+### **Speciální případy:**
+
+1. **Nehlasující členové (non-voting members):**
+
+   - Mají kopii dat, ale nemohou hlasovat.
+   - Mohou být zvoleni primárním, ale toto nastavení není doporučeno.
+
+2. **Veto členů:**
+   - Každý člen může volbu vetovat, pokud:
+     - Kandidát není synchronizován s nejnovější operací v replica setu.
+     - Kandidát má nižší prioritu než jiný oprávněný člen.
+
+## Arbiter
+
+- specialni uzel
+- neuchovava dataset
+- nemuze byt primary
+- je pouze pro hlasovani ve volbach (pro repliky se sudym poctem hlasujicich)
+
+## Sharding
+
+### **Sharded Clusters v MongoDB**
+
+- **Složení:**
+  1. **Shards:** Uchovávají data.
+     - Každý shard je replica set.
+  2. **Query Routers:** Rozhraní pro klientské aplikace.
+     - Routují operace na správné shard(y) a vracejí výsledky.
+     - Více routerů pro rozložení zátěže.
+  3. **Config Servers:** Uchovávají metadata clusteru.
+     - Mapují datovou sadu na shardy.
+     - Doporučený počet: 3.
+
+![alt](./images/mongo_sharding.png)
+
+## Partitioning dat
+
+### **Data Partitioning v MongoDB**
+
+- **Rozdělení dat:** Data kolekce se dělí podle **shard key**.
+
+  - **Shard key:**
+    - Indexované pole (možné složené), které je přítomné v každém dokumentu.
+    - **Neměnný** (immutable).
+  - Data se dělí na **chuncks**, které se distribuují mezi shardy.
+
+- **Rozdělení dat:**
+
+  - **Range-Based Partitioning:**
+    - Hodnoty shard key se rozdělí na kontinuální úseky (chunky).
+    - Efektivnější pro range dotazy, ale může vést k nerovnoměrné distribuci dat.
+  - **Hash-Based Partitioning:**
+    - Hodnota shard key se zahashuje a výsledné hashe tvoří chunky.
+    - Rovnoměrnější distribuce dat, ale range dotazy mohou zasáhnout více shardů.
+
+- **Chunk velikost a migrace:**
+  - Chunk se rozdělí, pokud přeroste nastavenou velikost (**výchozí 64MB**).
+  - **Malé chunky:** Rovnoměrnější distribuce, ale častější migrace.
+  - **Velké chunky:** Méně migrací, ale nerovnoměrné zatížení.
+
+## Journaling
+
+- **Co dělá:** Ukládá zápisové operace do paměti a journalu před aplikací na data.
+- **Účel:** Obnovení konzistence databáze po tvrdém vypnutí.
+- **Journal file:**
+  - Append-only log (write-ahead redo log).
+  - Smazán, když jsou všechny zápisy provedeny.
+  - Nový soubor vytvořen při 1 GB (velikost lze upravit).
+- **Clean shutdown:** Smaže všechny journal soubory.
+
+## **Two-Phase Commit v MongoDB**
+
+### Transakce přes více dokumentů:
+
+- Když operace zahrnuje více dokumentů (např. změny v několika kolekcích), MongoDB podporuje multi-document transactions, které zajišťují transakční vlastnosti (ACID) pro více dokumentů najednou.
+
+### **Co je Two-Phase Commit?**
+
+- Proces umožňující transakce zahrnující více dokumentů s **transaction-like** vlastnostmi.
+- Data jsou ukládána a spravována pomocí speciální kolekce transakcí.
+
+---
+
+### **Kroky Two-Phase Commit**
+
+#### **Příklad: Převod peněz mezi účty A a B**
+
+1. **Inicializace transakce:**
+
+   - Vytvoříme účty:
+     ```javascript
+     db.accounts.save({name: "A", balance: 1000, pendingTransactions: []});
+     db.accounts.save({name: "B", balance: 1000, pendingTransactions: []});
+     ```
+   - Vytvoříme transakci:
+     ```javascript
+     db.transactions.save({source: "A", destination: "B", value: 100, state: "initial"});
+     ```
+     - Transakce má stav `initial`.
+
+2. **Změna stavu transakce na `pending`:**
+
+   ```javascript
+   t = db.transactions.findOne({state: "initial"});
+   db.transactions.update({_id: t._id}, { $set: {state: "pending"} });
+   ```
+
+3. **Aplikace transakce na účty:**
+
+   - Odepíšeme z účtu A a připíšeme na účet B:
+     ```javascript
+     db.accounts.update({ name: t.source, pendingTransactions: {$ne: t._id} },
+       { $inc: {balance: -t.value}, $push: {pendingTransactions: t._id} });
+     db.accounts.update({ name: t.destination, pendingTransactions: {$ne: t._id} },
+       { $inc: {balance: t.value}, $push: {pendingTransactions: t._id} });
+     ```
+
+4. **Změna stavu transakce na `applied`:**
+
+   ```javascript
+   db.transactions.update({_id: t._id}, { $set: {state: "applied"} });
+   ```
+
+5. **Odstranění `pendingTransactions` z účtů:**
+
+   ```javascript
+   db.accounts.update({name: t.source}, { $pull: {pendingTransactions: t._id} });
+   db.accounts.update({name: t.destination}, { $pull: {pendingTransactions: t._id} });
+   ```
+
+6. **Změna stavu transakce na `done`:**
+   ```javascript
+   db.transactions.update({_id: t._id}, { $set: {state: "done"} });
+   ```
+
+---
+
+### **Řešení chyb**
+
+- **Mezi kroky 1 a 3 (před aplikací transakce):**
+
+  - Pokračujeme od kroku 2: nastavíme stav transakce na `pending`.
+
+- **Mezi kroky 3 a 6 (po aplikaci transakce):**
+  - Pokračujeme od kroku 5: odstraníme `pendingTransactions` a dokončíme transakci.
+
+---
+
+### **Rollback transakce**
+
+1. **Nastavení stavu na `cancelling`:**
+
+   ```javascript
+   db.transactions.update({_id: t._id}, { $set: {state: "cancelling"} });
+   ```
+
+2. **Vrácení změn na účtech:**
+
+   ```javascript
+   db.accounts.update({name: t.source, pendingTransactions: t._id},
+     { $inc: {balance: t.value}, $pull: {pendingTransactions: t._id} });
+   db.accounts.update({name: t.destination, pendingTransactions: t._id},
+     { $inc: {balance: -t.value}, $pull: {pendingTransactions: t._id} });
+   ```
+
+3. **Změna stavu na `cancelled`:**
+   ```javascript
+   db.transactions.update({_id: t._id}, { $set: {state: "cancelled"} });
+   ```
+
+---
+
+### **Více aplikací a správa transakcí**
+
+- **Požadavek:** Jen jedna aplikace může spravovat konkrétní transakci.
+- **Řešení:** Použití metody `findAndModify`:
+  ```javascript
+  t = db.transactions.findAndModify(
+    {query: {state: "initial", application: {$exists: false}},
+     update: {$set: {state: "pending", application: "A1"}},
+     new: true});
+  ```
+  - Tímto způsobem se transakce přiřadí konkrétní aplikaci a zajistí se atomická změna.
+
 # Grafove databaze
 
 # Multimodel databaze
