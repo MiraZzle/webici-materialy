@@ -2631,6 +2631,238 @@ ALLOW FILTERING;
 
 # Grafove databaze
 
+- umoznuji modelovat komplexni vztahy mezi objekty
+- vztahy jsou persistentni a nejsou vypocteny behem dotazu narozdil od relacnnich dbs
+
+# Neo4J (grafove)
+
+- ma plne ACID vlastnosti
+- otpimalizovana pro propojena data
+
+## Principy
+
+- zakladni jednotkou je uzel + vztahy
+- uzly a vztahy mohou obsahovat vlastnosti (key/value pary)
+- vztahy jsou orientovane
+- uzly mohou mit labels
+- hrany mohou byt typovane
+
+## **Traversal Framework v Neo4j - Výpis**
+
+- **Projití grafem:** Navštívení uzlů a hran podle stanovených pravidel.
+
+### **Klíčové komponenty traversal frameworku:**
+
+1. **Expanders:**
+
+   - Definují, co se bude procházet (např. směr a typ relací).
+
+2. **Order:**
+
+   - Pořadí průchodu:
+     - **Depth-first (DFS):** Do hloubky.
+     - **Breadth-first (BFS):** Do šířky.
+
+3. **Uniqueness:**
+
+   - Zajišťuje, že uzly, relace nebo cesty jsou navštíveny pouze jednou.
+
+4. **Evaluator:**
+
+   - Rozhoduje, co se má vrátit a zda pokračovat v průchodu za aktuální pozici.
+
+5. **Startovací uzly:**
+   - Uzly, kde průchod grafem začíná.
+
+## Gremlin
+
+- jazek pro graph traversal
+- open source, vyvijen TinkerPopem
+- skripty bezi na serveru db
+
+![alt](./images/gremlin_property_graph.png)
+
+## Cypher
+
+- grafovy dotazovaci jazyk pro Neo4J
+- dotazy a updaty
+- narozdil od Gremlinu je deklarativni -> popiseme, co chceme a ne jak to chceme ziskat
+
+### **Klauzule Cypher**
+
+1. **START:** Výchozí body v grafu (indexy, IDs).
+2. **MATCH:** Grafový vzor k nalezení, navázaný na výchozí body.
+3. **WHERE:** Kritéria filtrace.
+4. **RETURN:** Co se má vrátit.
+5. **CREATE:** Vytvoření uzlů a vztahů.
+6. **DELETE:** Odstranění uzlů, vztahů a vlastností.
+7. **SET:** Nastavení hodnot vlastností.
+8. **FOREACH:** Akce na každém prvku seznamu.
+9. **WITH:** Rozdělení dotazu na více částí.
+
+---
+
+### **Příklady dotazů**
+
+1. **Vytvoření uzlů:**
+
+   ```cypher
+   CREATE (n);
+   CREATE (a {name: 'Andres'}) RETURN a;
+   ```
+
+2. **Vytvoření vztahů:**
+
+   ```cypher
+   MATCH (a {name: "Andres"})
+   CREATE (a)-[r:FRIEND]->(b {name: "Jana"}) RETURN r;
+   ```
+
+3. **Vytvoření cesty:**
+
+   ```cypher
+   CREATE p = (andres {name:'Andres'})-[:WORKS_AT]->(neo)<-[:WORKS_AT]-(michael {name:'Michael'})
+   RETURN p;
+   ```
+
+4. **Změna vlastností:**
+
+   ```cypher
+   MATCH (n { name: 'Andres' })
+   SET n.surname = 'Taylor' RETURN n;
+   ```
+
+5. **Smazání:**
+
+   ```cypher
+   MATCH (n { name: 'Andres' }) DETACH DELETE n;
+   ```
+
+6. **FOREACH:**
+
+   ```cypher
+   MATCH p =(begin)-[*]->(END)
+   WHERE begin.name = 'A' AND END.name = 'D'
+   FOREACH (n IN nodes(p)| SET n.marked = TRUE);
+   ```
+
+7. **Dotazování:**
+
+   ```cypher
+   MATCH (john {name: 'John'})-[:friend]->()-[:friend]->(fof)
+   RETURN john.name, fof.name;
+   ```
+
+8. **Řazení:**
+
+   ```cypher
+   MATCH (n)
+   RETURN n.name, n.age
+   ORDER BY n.name;
+   ```
+
+9. **Počet vztahů:**
+   ```cypher
+   MATCH (n { name: 'A' })-[r]->()
+   RETURN type(r), count(*);
+   ```
+
+---
+
+### **Další funkce a operátory**
+
+- **Agregace:**
+  - `COUNT`, `SUM`, `AVG`, `MAX`, `MIN`.
+- **LIMIT a SKIP:**
+  - Omezení vrácených výsledků (`LIMIT n`).
+  - Přeskočení prvních výsledků (`SKIP n`).
+- **Predikáty:**
+  - `ALL`, `ANY`.
+- **Funkce:**
+  - Délka cesty (`LENGTH`), typ vztahu (`TYPE`), ID uzlu/vztahu (`ID`).
+- **Operátory:**
+  - Výkonné nástroje pro práci s daty v grafech.
+
+## Mnagamenet transakci
+
+- neo4j ma podporu ACID vlastnosti
+- vsechny zapisy v grafu musi byt provedeny v transakci
+  - tohle se resi zanorenymi transakcemi
+- **Kroky transakce:**
+
+1. Zacit transakci
+2. Prace s grafem a write operacemi
+3. Oznaceni transakce za uspesnou nebo ne
+4. Konec transakce -> pamet a zamky vypusteny
+
+## **Čtení (Read)**
+
+- **Výchozí chování:**
+  - Čtení vrací poslední potvrzenou hodnotu.
+  - **Čtení neblokuje ani nezamyká**.
+- **Vyšší úroveň izolace:**
+  - **Zámky pro čtení** lze explicitně získat, pokud je potřeba zamezit změnám.
+
+---
+
+## **Zápis (Write)**
+
+- **Zpracování:**
+  - Všechny úpravy v rámci transakce se uchovávají v paměti.
+  - Velké aktualizace musí být rozděleny na menší části.
+- **Výchozí zamykání:**
+  - **Vlastnosti uzlů/vztahů:**
+    - Při přidání, změně nebo odstranění se zamkne daný uzel/vztah.
+  - **Vytvoření nebo smazání uzlu:**
+    - Zápisový zámek na konkrétní uzel.
+  - **Vytvoření nebo smazání vztahu:**
+    - Zámek na vztah a jeho propojené uzly.
+
+---
+
+## **Smazání (Delete)**
+
+- **Chování:**
+  - Při smazání uzlu/vztahu jsou odstraněny i všechny jeho vlastnosti.
+- **Vztahy připojené k uzlu:**
+  - Pokud jsou k uzlu připojeny vztahy, budou smazány také.
+
+## Indexace
+
+- maji jedinecne, uzivatelem specifikovane jmeno
+- indexovat lze uzly a vztahy
+
+## Automaticka indexace
+
+- jeden automaticky index pro uzly a jeden pro vztahy
+  - defaultne vypnuto
+
+## High availability
+
+- transakce jsou atomicke, isolovane, durable, ale pro `C` jsou eventualne propagovane slavum
+- umoznuje fault-tolerantni databazi
+- muzeme nakonfigurovat nektere ze slavu jako presne repliky specificke neo4j master databaze
+- umoznuje read-mostly architekturu
+- vzdy jeden master a zadni nebo vice slavu
+- pri startupu se neo4j db instance snazi napojit ke clusteru
+  - pokud cluster existuje, stane se slavem
+  - jinak se stava masterem
+
+### Zapis na masterovi
+
+- je eventelne propagon do slavu
+
+### Zapis na slavovi
+
+- je ihned synced s masterem
+- operace je provedena u slava a taky u mastera
+
+## Data na disku
+
+- linked list zaznamu
+- properties = linked list property zaznamu
+  - key + value + ref na dalsi vlastnost
+
 # Multimodel databaze
 
 # Polystores
