@@ -48,6 +48,9 @@
 - **Volume** – velké objemy dat.
 - **Variety** – různorodost dat.
 - **Velocity** – rychlost generování a zpracování dat.
+- (**\*Veracity** – neucelenost dat\*)
+
+![alt](./images/big_data_4v.png)
 
 ---
 
@@ -944,7 +947,7 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 - pomoci obsahu dat neni mozne (BLOB -> data nemusi byt jakkoliv definovana)
 - klice jsou generovany nejakym algoritmem (auto incremenet), user generated nebo treba time stamps
 
-# Riak (Key-value)
+# Riak (Key-value -> multimodel)
 
 - open source
 
@@ -1388,7 +1391,8 @@ QUEUED
 
 # Sloupcove databaze
 
-- "column-oriented" je neco jineho
+- **Column-oriented DBMS:** Ukládá data tabulek ve formě sloupců místo řádků (není nutně NoSQL).
+- **Column-family DBMS:** NoSQL databáze, která podporuje tabulky s různým počtem a typy sloupců.
 
 ## Terminologie
 
@@ -1414,7 +1418,7 @@ QUEUED
 
 - ### Agregovani dat v dotazech
 
-# Cassandra (sloupcove)
+# Cassandra (sloupcove -> multimodel)
 
 - Vyvinuta ve FB
 - Ma vlastni query jazyk `CQL`
@@ -2865,6 +2869,157 @@ ALLOW FILTERING;
 
 # Multimodel databaze
 
+- u big data prichazi problem s Variety
+- podpora vice datovych modelu v jednom integrovanem BE
+- zaklady lezi v ORDMBS -> ORM
+- Vyhody:
+  - jeden system na vsechna data
+  - konzistence
+  - sjednodena query language
+- Nevyhody:
+  - komplexni
+  - nezrale a stale ve vyvoji
+- Priklady: ArangoDB, OrientDB
+
+## Polyglotni persistence
+
+- idea: pouzit sparvny nastroj pro dany ukol
+- pro nejaka data tedy vyuzijeme grafovou db, pro jina key/value apod.
+- Vyhody:
+  - multi model data jsou uchovany
+  - dobra skalovatelnost
+- Nevyhody:
+  - integrace vsech ruznych db
+  - cross model dotazy a transakce
+
+## ArangoDB (dokumentova -> multimodel)
+
+- dokumenty, grafy, key/value
+- uklada vsechna data jako dokumenty
+
+## OrientDB (grafova -> multimodel)
+
+- dokumentovy, grafy, key/value, objekty
+- vztahy jsou reseny jako v grafovych db s hranami mezi zaznamy
+- dotazy v SQL pro rozsireny graph traversal
+
+## Techniky rozsireni k multimodelu
+
+- nejvice typ multimodel dbs jsou relacni
+
+### **Typy strategií:**
+
+1. **Nová strategie ukládání prizpusobena novemu modelu**
+
+2. **Rozšíření původní strategie:**
+
+   - Přidání podpory pro nový model (např. ArangoDB - speciální edge kolekce pro grafy).
+
+3. **Nové rozhraní pro původní strategii**
+
+4. **Beze změny původní strategie:**
+   - Data jednoduššího formátu než původní model jsou ukládána a zpracovávána bez změn.
+
+### **Typy přechodů mezi modely:**
+
+- **Inter-model references:** Odkazy mezi modely.
+- **Model embedding:** Vnoření jednoho modelu do druhého.
+- **Cross-model redundancy:** Redundance dat mezi modely.
+
+## Zpracovavani multimodel dotazu
+
+- typicky chceme stavet na uz funkcnim dotazovacim systemu
+- optimalizace dotazu probiha nejcasteji pomoci B-tree/B+-tree indexu
+
+## Vyzvy mutlimodel databazi
+
+![alt](./images/multimodel_challenges.png)
+
 # Polystores
+
+- slozitym problemem je **variety** -> motivuje multimodel dbs a polystores
+- propojuje vice technologii pro ukladani dat -> vybirama na zaklade vyuziti aplikaci
+- vyuzivaji nejvhodnejsi nastroje pro kazdy dilci ukol
+
+## Vyhody a nevyhody
+
+### Vyhody
+
+- dobra skalovatelnost
+- prenositelne znalosti ze single modelu
+
+### Nevyhody
+
+- nutnost specialistu pro integraci ruznych dbs
+- cross-model dotazy a transakce
+
+## Typy Polystoru
+
+1. **Loosely-coupled**
+
+   - Podobné architektuře **mediator-wrapper**.
+   - kazda db ma svuj **wrapper**
+   - query procesor preda wrapperu cast query ke zpracovani
+   - Používají **jeden spolecny interface**
+   - jednotlive dbs maji svoji autonomii (dostanou primo cast query, ale sami si ji pak pro sebe prelozi)
+
+2. **Tightly-coupled**
+
+   - centralni je mediator
+   - Využívají přímo **lokální interface**
+   - od mediatoru tedy dostane db pro sebe specificke pokyny
+   - Používají **materializované views** a **indexy**
+
+3. **Hybridy**
+
+![alt](./images/polystore_types.png)
+
+## Dimenze polystoru
+
+### **Klíčové vlastnosti polystorů**
+
+1. **Heterogenita:**
+
+   - Různé datové modely, dotazovací modely, možnosti vyjádření a dotazovací enginy.
+
+2. **Autonomie:**
+
+   - Asociace s polystorem, podpora nativních aplikací
+
+3. **Transparentnost:**
+
+   - Skrytí umístění dat (i přes více úložišť) a jejich transformace/migrace
+
+4. **Flexibilita:**
+
+   - Uživatelsky definovaná schémata, interfacy a modularita
+
+5. **Optimalita:**
+   - plány a optimální umístění dat
+
+## 1. Tightly integrated polystores (TIPs)
+
+![alt](./images/polystores_tips.png)
+![alt](./images/polystores_tight.png)
+
+## 2. Loosely Integrated Polystores
+
+### **Kroky**
+
+1. Rozdělit dotaz na dílčí dotazy pro jednotlivá úložiště.
+2. Odeslat dílčí dotazy wrapperům.
+3. Přeložit dotazy do formátu úložišť.
+4. Získat výsledky z úložišť.
+5. Přeložit výsledky do společného formátu.
+6. Integrovat výsledky do jednoho výstupu.
+
+![alt](./images/polystores_loose.png)
+
+## 3. Hybridni Polystory
+
+- vyuzivaji mediator-wrapper architekturu
+- prikladem je `BigDAWG`
+
+![alt](./images/polystores_hybrid.png)
 
 # Advanced
