@@ -5,9 +5,11 @@
 
 # **Materiály ke zkoušce z Moderních databázových systémů**
 
+**Autor**: [Matěj Foukal](https://github.com/MiraZzle)
+
 [**Stránky předmětu**](https://www.ksi.mff.cuni.cz/~holubova/NDBI040/)
 
-## Osnova
+## **Osnova**
 
 - [Vrstvy databázových modelů](#vrstvy-databázových-modelů)
 - [Big Data](#big-data)
@@ -146,39 +148,39 @@
 
 ---
 
-# HDFS
+# **HDFS**
 
 - Hadoop Distributed File System
 - Škálovatelný a opensource
 
-## Apache Hadoop
+## **Apache Hadoop**
 
 - opensource framework s nástroji pro zpracování Big Data
-- vyšel z Google MapReducs a GFS (Google File System)
+- vyšel z **Google MapReducs** a GFS (Google File System)
 - nástroje (komponenty) Hadoopu:
-  - HDFS - distribuovaný file systémů
-  - Hadoop YARN - scheduling a resource management clusterů
-  - Hadoop MapReduce - paralelní zpracování dat
+  - **HDFS** - distribuovaný file systémů
+  - **Hadoop YARN** - scheduling a resource management clusterů
+  - **Hadoop MapReduce** - paralelní zpracování dat
 
-## Fault tolerance v HDFS
+## **Fault tolerance v HDFS**
 
 - _"failure is the norm rather than exception"_
 - očekáváme, že vždy nějaká část nefunguje
 - detekce chyb a auto recovery
 
-## Typ dat v HDFS
+## **Typ dat v HDFS**
 
 - data proudí ve streamu
 - automatický batch Processing
 - write-once / read-many
 
-## Nodes v HDFS
+## **Uzly v HDFS**
 
-- Master / Slave archikektura
+- **Master / Slave** archikektura
 - HDFS využivá celý FS namespace
-- Soubory jsou děleny na bloky (64MB, 128MB apod)
+- Soubory jsou děleny na **bloky** (64MB, 128MB apod)
 
-### NameNode
+### **NameNode**
 
 - master server
 - řídí namespace
@@ -187,7 +189,7 @@
 - určuje mapování bloků na DataNodes
 - přijímá **HeartBeat** a **BlockReport** od DataNodes
 
-#### Jak funguje NameNode
+#### **Jak funguje NameNode**
 
 - Používá transakční log - **EditLog**
   - Zaznamenává všechny změny v meta datech FS (tvorba souboru, změna repliačního faktoru)
@@ -196,39 +198,39 @@
   - opět uložen v lokálním FS NameNodu
   - Je načten do paměti NameNodu (4GB RAM stačí)
 
-#### Proces zapnutí systému z pohledu NameNode:
+#### **Proces zapnutí systému z pohledu NameNode:**
 
-1. NameNode přečte FsImage a EditLog z disku
-2. Aplikuje všechny operace v EditLogu na FsImage reprezentaci
-3. Udělá **CheckPoint** - Flush out této verze systému do nového FsImage
-4. Zkrátí EditLog
+1. NameNode přečte **FsImage** a **EditLog** z disku
+2. Aplikuje všechny operace v **EditLogu** na **FsImage** reprezentaci
+3. Udělá **CheckPoint** - **Flush out** této verze systému do nového FsImage
+4. Zkrátí _EditLog_
 
-### DataNode
+### **DataNode**
 
 - provádí r/w requesty
 - práce s bloky - tvorba, mazání a replikace na příkaz NameNode
 
-#### Jak funguje DataNode
+### **Jak funguje DataNode**
 
 - Ukládá data do souborů ve vlastním FS
 - Každý blok HDFS je samostatný soubor
 - Netvoří všechny soubory ve stejném adresáři (využívá nějakou heuristiku)
 
-#### Proces zapnutí systému z pohledu DataNode:
+### **Proces zapnutí systému z pohledu DataNode:**
 
 1. Generace seznamu všech svých HDFS bloků = **BlockReport**
 2. Odešle **BlockReport** NameNodu
 
 ![alt text](./images/hdfs_arch.png)
 
-## Namespace
+## **Namespace HDFS**
 
-- Hierarchický FS
+- Hierarchický FS (= FileSystem)
 - CRUD operace
-- NameNode je správcem FS - zaznamenává změny
-- Aplikace si specifkuje replikační faktor a to je uloženo v NameNode
+- NameNode je **správcem FS** - zaznamenává změny
+- Aplikace si specifikuje replikační faktor a to je uloženo v NameNode
 
-## Replikace
+## **Replikace v HDFS**
 
 - soubor je rozdělen na posloupnost bloků
 - bloky mají stejnou velikost až na poslední
@@ -236,55 +238,55 @@
 - replikace je nastavitelná
 - zajišťuje fault toleranci
 
-## Umístění replik
+## **Umístění replik v HDFS**
 
-### Rack-aware
+### **Rack-aware**
 
-- bereme v potaz fyzickou lokaci uzly
-- uzly jsou děleny do racků
+- bereme v potaz **fyzickou lokaci** uzlu
+- uzly jsou děleny do **racků**
 - racky mezi sebou komunikují skrze switche
-- NameNode určí rack id pro každou DataNode
+- NameNode určí **rack id** pro každou DataNode
 - jednoduchý přístup: umístíme uzly do jiných racků => drahé zápisy
 
-#### Standartní přístup
+### **Standartní přístup Rack-aware**
 
 - replikační faktor je 3
 - Repliky jsou umístěný následovně:
-  - Jedna v uzlu na lokálním racku
-  - Jedna na jiném uzlu v lokálním racku
-  - Jedna na uzlu v jiném racku
+  - Jedna v uzlu na **lokálním racku**
+  - Jedna na **jiném uzlu v lokálním racku**
+  - Jedna na uzlu v **jiném racku**
 
-## Chyby
+## **Selhání v HDFS**
 
-### Network Failure
+### **Network Failure**
 
 - ztráta připojení DataNodes k NameNode
 - DataNodes přestanou posílat heartbeat a jsou NameNode označeny
 - DataNode k nim neposílá I/O požadavky
 
-### DataNode Failure
+### **DataNode Failure**
 
-- může klesnout počet replik pod replikační faktor => nutnost re-replikace
+- může klesnout počet replik pod replikační faktor => nutnost **re-replikace**
 
-# MapReduce
+# **MapReduce**
 
 - Využívá paradigma **Rozděl a panuj**
 
-## Faze Map
+## **Fáze Map**
 
-- Input: key/value páry
-- Output: množina dočasných key/value párů - typicky jiná doména než input
-- formálně: `(k_1, v_1) -> list(k_2, v_2)`
+- **Input**: key/value páry
+- **Output**: množina dočasných key/value párů - typicky jiná doména než input
+- **formálně**: `(k_1, v_1) -> list(k_2, v_2)`
 
-## Faze Reduce
+## **Fáze Reduce**
 
-- Input: Dočasný klíč a množina všech hodnot pro ten klíč
-- Output: Menší množina hodnot ve stejné doméně
-- formálně: `(k_2, list(v_2)) -> list(k_2, possibly smaller list(v_2))`
+- **Input**: Dočasný klíč a množina všech hodnot pro ten klíč
+- **Output**: Menší množina hodnot ve stejné doméně
+- **formálně**: `(k_2, list(v_2)) -> list(k_2, possibly smaller list(v_2))`
 
-## Příklady MapReduce:
+## **Příklady MapReduce:**
 
-### Word Frequency
+### **Word Frequency**
 
 ```
 map(String key, String value):
@@ -304,36 +306,36 @@ reduce(String key, Iterator values):
     Emit(key, AsString(result));
 ```
 
-## Části MapReduce
+## **Části MapReduce**
 
-### Input reader
+### **Input reader**
 
 - dělí vstup na části => kazda cast nalezi jedne map funkci
 - generuje key / value pary
 
-### Map funkce
+### **Map funkce**
 
 - uzivatelem specifkovane zpracovani key / value paru
 
-### Partition funkce
+### **Partition funkce**
 
 - dostane klice z map funkce a pocet reduceru
-- vrati index reduceru, ktery se ma pouzit
+- vrati index **reduceru**, ktery se ma pouzit
 - typicky zaheshujeme klic a modulime poctem reduceru
 
-### Compare funkce
+### **Compare funkce**
 
 - setridi vstup do reduce funkce
 
-### Reduce funkce
+### **Reduce funkce**
 
 - uzivatelem specifkovane zpracovani key / values
 
-### Output writer
+### **Output writer**
 
 - zapise vysledek reduce funkce do stabilniho uloziste
 
-## Prubeh mapreduce
+## **Průběh mapreduce**
 
 1. MapReduce knihovna rozdeli vstupni soubory do M casti (16MB - 64MB na cast)
 2. Start kopii mapreduce na clusteru
@@ -365,88 +367,88 @@ reduce(String key, Iterator values):
 
 ![alt](./images/mapreduce_e5.png)
 
-## Combine funkce
+## **Combine funkce**
 
 - uzivatelem specifikovana funkce
 - neco jako reduce funkce ale jeste v map fazi
 - bezi pres lokalni data v mapperu
 - slouzi ke kompresi posilaneho souboru
 
-## Counters
+## **Counters**
 
-- uzivatel muze priradit pocitadlo k jakekoliv akci mapperi / reduceru
+- uzivatel muze priradit pocitadlo k jakekoliv akci mapperu / reduceru
 
-## Fault Tolerance
+## **Fault Tolerance**
 
-### Worker Failure
+### **Worker Failure**
 
 - master pinguje workery
 - pokud worker neodpovida, je oznacen za failed
 - vsechny jeho tasky jsou naplanovany zpet do puvodniho idle stavu
 - jeho tasky si pak rozeberou od zacatku jini workeri
 
-### Master Failure
+### **Master Failure**
 
 - 2 strategie
 
-#### Strategie A
+#### **Strategie A**
 
-- master si dela periodicke checkpointy master datovych struktur
+- master si dela periodicke **checkpointy** master datovych struktur
 - pokud master zemre, nova kopie je nastartovana z pozice posledniho checkpointu
 
-#### Strategie B
+#### **Strategie B**
 
 - Jeden master -> jeho selhani je malo pravdepodobne
 - Pokud selze, cely prubeh MapReduce se zahodi
 
-## Stragglers
+## **Stragglers**
 
 - "struggler"
 - stroj, ktery je pomaly -> nektere casti mu trvaji nezvykle dlouho
 
-### Reseni straggleru:
+### **Reseni straggleru**
 
 - tesne pred dokoncenim MapReduce operace master naplanuje backup executions zbylych zapocatych tasku
 - task je oznacena za hotovou, pokud jeji primarni nebo backup vykonavani je dokonceno
 
-## Granularita tasku
+## **Granularita tasku**
 
-- M casti Map faze
-- R casti Reduce faze
+- `M` casti Map faze
+- `R` casti Reduce faze
 - Master provede `O(M + R)` scheduling rozhodnuti
 - Master uchovava `O(M * R)` status informaci v pameti
-- R je typicky omezeno uzivatelem
+- `R` je typicky omezeno uzivatelem
 
-# Hadoop MapReduce
+# **Hadoop MapReduce**
 
 - HDFS + JobTracker (master) + TaskTracker (slave)
 
-## JobTracker
+## **JobTracker**
 
 - Master
 - pracuje jako scheduler - deleguje praci do TaskTrackeru
 - komunikuje s NameNode (HDFS master) a vyhleda TaskTracker (Hadoop client) pobliz dat
 - presune skutecnou praci do TaskTracker uzlu
 
-## TaskTracker
+## **TaskTracker**
 
 - client
-- Prijima tasky od JobTrackeru
+- Prijima tasky od **JobTrackeru**
 - Map, Reduce, Combine
 - Input a output cesty
-- Ma omezeny pocet task slotu
-- Pro kazdy task vyobi novou instanci JVM (Java Virtual Machine)
-- Pocet volnych slotu posila pres heartbeat JobTrackeru
+- Ma omezeny pocet **task slotu**
+- Pro kazdy task vyobi novou instanci **JVM** (Java Virtual Machine)
+- Pocet volnych slotu posila pres **heartbeat JobTrackeru**
 
 ![alt](./images/mapreduce_hdfs.png)
 
-# Apache Spark
+# **Apache Spark**
 
 - data analytics engine
 - narozdil od Hadoop MapReduce je rychlejsi diky praci in memory narozdil od disk I/O, ktery zpomaloval MapReduce
 - podporuje taky Spark SQL
 
-## Driver program
+## **Driver program**
 
 - Spark Aplikace = driver program
 - Obsahuje uzivatelem specifikovany kod pro dany problem a provadi orchestraci
@@ -455,19 +457,19 @@ reduce(String key, Iterator values):
 - mela by bezet blizko worker nodes (idealni v jedne LAN)
 - Je spravovan skrze Web UI (ukazoval nam Yaghob v Cloudu)
 
-## SparkContext
+## **SparkContext**
 
 - centralni entita v driver programu
 - koordinace mezi driverem a cluste managerem
 - ridi resourcy a provadeni tasku
 
-## ClusterManager
+## **ClusterManager**
 
 - spark si muze vybrat Cluster Managera
 - externi system, ktery alokuje resourcy
 - Priklady: Kubernetes, YARN (Resource Manager Hadoopu), Apache Mesos
 
-## Resilient Distributed Dataset (RDD)
+## **Resilient Distributed Dataset (RDD)**
 
 - immutabilni
 - kolekce elementu rozdelenych mezi uzly v clusteru
@@ -475,7 +477,7 @@ reduce(String key, Iterator values):
 - lze persistovat v pameti (volani `persist` nebo `cache` funkci)
 - paralelni zpracovani
 
-### Jak vytvorit RDD
+### **Jak vytvorit RDD**
 
 - paralelizujeme existujici kolekci v driver programu
 
@@ -490,11 +492,11 @@ JavaRDD<Integer> distData = sc.parallelize(data);
 JavaRDD<String> distFile = sc.textFile("data.txt");
 ```
 
-## RDD operace
+## **RDD operace**
 
 - delime na Transformace a Akce
 
-## RDD Transformace
+## **RDD Transformace**
 
 - vytvoreni noveho datasetu z existujiciho
 - prakticky `map` funkce
@@ -568,7 +570,7 @@ JavaPairRDD<String, Integer> sortedRDD = pairs.sortByKey(true);
 
 ---
 
-### Další funkce:
+### **Další funkce RDD**
 
 - **`intersection`**: Vrátí dataset s prvky, které se nachází v obou vstupech.
 - **`distinct`**: Vrátí dataset obsahující pouze unikátní prvky.
@@ -579,7 +581,7 @@ JavaRDD<Integer> rdd = sc.parallelize(Arrays.asList(1, 2, 2, 3, 4, 4));
 JavaRDD<Integer> distinctRDD = rdd.distinct();
 ```
 
-## RDD Akce
+## **RDD Akce**
 
 - vratime hodnotu do driveru po nejaky vypoctu nad datasetem
 - prakticky `reduce` funkce
@@ -645,18 +647,18 @@ List<Integer> smallestTwo = rdd.takeOrdered(2); // Výsledek: [1, 2]
 List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Výsledek: [4, 3]
 ```
 
-## Shuffle Operace
+## **Shuffle Operace**
 
 - nektere akce spousti shuffle
 - shuffle = mechanismus pro redistribuci dat pres partitions
 - nutnost kopirovani dat mezi executory a stroji
 
-### Priklad Shuffle Operace: ReduceByKey
+### **Priklad Shuffle Operace: ReduceByKey**
 
 - Problém: Hodnoty stejného klíče mohou být v různých partitions nebo na různých strojích v clusteru
 - Řešení (Shuffle): Spark načte hodnoty stejného klíče ze všech paritions, spojí je dohromady a spočítá finální výsledek
 
-## RDD vs DataFrame vs Dataset
+## **RDD vs DataFrame vs Dataset**
 
 - RDD = primarni API ve Sparku, neobsahuje optimaliyace jako DataFrame nebo Dataset
 - DataFrame = data jsou organizovana do pojmenovanych sloupcu
@@ -674,14 +676,14 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 
 ![alt](./images/spark_api.png)
 
-# Principy MDBS
+# **Principy MDBS**
 
 - vzdáme se něketerých ACID vlastností
 - Ze silné konzistence -> slabá konzistence
 
-## Scalability
+## **Scalability**
 
-### Vertikalni scaling (scaling up)
+### **Vertikalni scaling (scaling up)**
 
 - v historii preferovano
 - zarucovalo strong consistency (protoze stacil jen jeden stroj)
@@ -689,12 +691,12 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 - drahe
 - stale existuje limit pro silu a kapacitu jednoho stroje
 
-### Horizontalni scaling (scaling out)
+### **Horizontalni scaling (scaling out)**
 
 - system distribuujeme pres vice stroju / uzlu
 - staci komoditni hardware
 
-### Klamy (fallacies) horizontalniho scalingu
+### **Klamy (fallacies) horizontalniho scalingu**
 
 - Sit je spolehliva
 - Nulova letence
@@ -705,98 +707,100 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 - Nulova cena transportu
 - Sit je homogenni
 
-## ACID
+## **ACID**
 
 - typicke vlastnosti ocekavane u relacnich DBMS
-- Databzova transakce = jednotka prace (sekvence operaci) v DBMS
+- Databazova transakce = jednotka prace (sekvence operaci) v DBMS
 - tyto vlastnosti jsou ale prilis drahe v distribuovanych systemech
-- Atomicity - vse nebo nic, jedna selhana cast transakce = cela transakce selhala
-- Consistency - databaze se presouva pouze mezi konzistentnimi stavy
-- Isolation - efekty nedokonceene transakce (v prubehu, failed) nejsou viditelne zvenku
-- Durability - po commitu transakce zustane transkace commited (i pres vypadek elektriny, errory)
+- **Atomicity** - vse nebo nic, jedna selhana cast transakce = cela transakce selhala
+- **Consistency** - databaze se presouva pouze mezi konzistentnimi stavy
+- **Isolation** - efekty nedokonceene transakce (v prubehu, failed) nejsou viditelne zvenku
+- **Durability** - po commitu transakce zustane transkace commited (i pres vypadek elektriny, errory)
 
-## CAP Theorem
+## **CAP Theorem**
 
 - CAP ma 3 casti
 - Obecne ale nedava smysl, protoze definice nejsou dostatecne presne (napr. pouze CP by naznacovalo nikdy available)
 
-**Theorem:** `Only 2 of the 3 guarantees can be given in a “shared-data” system`
+**Theorem:** `Pouze 2 ze 3 casti mohou byt splneny v “shared-data” systemu`
 
 ![alt](./images/cap_theorem.png)
 
-### Consistency
+### **Consistency**
 
 - po zmene dat, vsechny cteni maji videt stejna data
 - vsechny uzly maji vzdy obsahovat stejna data
 
-### Availability
+### **Availability**
 
+- dostupnost
 - vsechny dotazy (cteni, zapisy) dostanou vzdy odpoved
 - nazavisle na vypadcich
 
-### Partition Tolerance
+### **Partition Tolerance**
 
-- system funguje i po izolovani podcasti systemu
+- tolerance systemu vuci izolovani jeho podcasti
+  - system funguje i po izolovani podcasti systemu
 - problemy s pripojenim neshodi system pokud je system fault tolerantni
 
-## BASE
+## **BASE**
 
 - lepe skalovatelny
 - sada principu jako ACID
 
-### Basically Available
+### **Basically Available**
 
 - system funguje prakticky vetsinu casu
 - castecne vypadky se deji ale bez selhani celeho systemu
 
-### Soft State
+### **Soft State**
 
 - system se neustale meni
 - stav systemu je nedeterministicky (kontrast vuci consistency v ACIDu, kde vzdy mame nejaky pevny stav)
 
-### Eventual Consistency
+### **Eventual Consistency**
 
 - nekdy v budoucnu bude system konzistentni (az treba vsechny stroje budou synced)
 
-## ACID vs BASE
+## **ACID vs BASE**
 
-- ACID garantuje _Consistency_ a _Availability_
+- ACID garantuje **Consistency** a **Availability**
   - pesimisticky pristup
   - toto dovoluje DB pouze na jednom stroji
-- BASE garantuje _Availability_ a _Partition
-  tolerance_
+- BASE garantuje **Availability** a **Partition**
+  tolerance\_
   - optimisticke
   - distribuovane databaze
-- samostatny system je `CA` system
+- samostatny system je `CA` (konzistentni a basically available) system
 
-## Silna konzistence
+## **Silna konzistence**
 
 ![alt](./images/strong_consistency.png)
 
-## Eventualni konzistence
+## **Eventualni konzistence**
 
 ![alt](./images/eventual_consistency.png)
 
-# Distribucni modely
+# **Distribucni modely**
 
 - Horizontalni scaling = databaze bezi na clusteru serveru
 - Mame dva ortogonalni pristupy (= pristupy, ktere mohou byt aplikovany zaroven. Jsou v jinych dimenzich / pohledech na vec)
   - **Replikace** - kopirovani stejnych dat pres uzly (master-slave nebo peer-to-peer)
   - **Sharding** - jina data na jinych uzlech
 
-## Single server
+## **Single server**
 
 - bez jakekoliv distribuce
 - DB pouze na tomto stroji
 - Dobre treba pro Grafove DB -> slozita distribuce
 
-## Sharding
+## **Sharding**
 
-- davame ruzna data na ruzne uzly
+- davame ruzne casti dat na ruzne uzly
 - idealne chceme pohromade data, ke kterym pristupujeme casto dohromady
-- selhani uzlu -> jeho data jsou nedostupna (proto casto kombinujeme s replikaci)
+- **selhani uzlu** -> jeho data jsou nedostupna (proto casto kombinujeme s replikaci)
 
-### Rozmisteni uzlu
+### **Rozmisteni uzlu**
 
 <ol type="A">
   <li>Jeden uživatel bere data z jednoho serveru</li>
@@ -804,43 +808,43 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
   <li>Distribuujeme rovnoměrně přes uzly</li>
 </ol>
 
-## Master-slave Replikace
+## **Master-slave Replikace**
 
-- jeden uzel je primarni (master), zbytek sekundarni (slaves)
+- jeden uzel je **primarni** (master), zbytek **sekundarni** (slaves)
 - master zodpovida za zpracovani a update dat
 - master limituje svoji schopnosti zpracovani updatu
-- Problemy:
+- **Problemy**:
   - skalovatelnost zapisu (master je bottleneck)
   - nechrani pred selhanim mastera
 
-### Volba mastera
+### **Volba mastera**
 
-- Manualni: user-defined
-- Auomaticka: cluster-elected
+- **Manualni**: user-defined
+- **Auomaticka**: cluster-elected
 
-## Peer-to-peer replikace
+## **Peer-to-peer replikace**
 
 - resi mnoho problemu master-slave replikace
 - bez mastera
-- Problem: konzistence
+- **Problem**: konzistence
   - zapisem na 2 mista vznika write-write konflikt
-- Reseni:
+- **Reseni**:
   - pri zapisu dat repliky koordinuji pro zabraneni konfliktu
   - vsechny repliky nemusi souhlasit, staci vetsina
 
-## Kombinace Shardingu a Replikace
+## **Kombinace Shardingu a Replikace**
 
-### Master-slave replikace a sharding
+### **Master-slave replikace a sharding**
 
 - vice masteru, ale master je pouze pro nejaky dany datovy item
 - uzel muze byt master pro nejaka data a slave pro jina
 
-### Peer-to-peer replikace a sharding
+### **Peer-to-peer replikace a sharding**
 
 - casta strategie pro sloupcove DB
 - idealne replikacni faktor 3, takze kazdy shard je na 3 uzlech
 
-### Konzistence
+### **Konzistence**
 
 #### **Write Consistency (Konzistence zápisu)**
 
@@ -881,21 +885,21 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
   - Zápisy s konflikty: Pouze jeden může získat většinu.
   - Pro zajištění aktuální hodnoty musíme kontaktovat dostatečný počet uzlů.
 
-# Zpracovani Big Data
+# **Zpracováni Big Data**
 
-## Priklady ukolu pro Big Data
+## **Úkoly pro Big Data**
 
 - analyza
 - visualizace
 - agregace
 - manipulace a uprava dat
 
-## Cloud computing
+## **Cloud computing**
 
 - Pronajem hw/sw (servery, data, software...) poptavce
 - [Virtualizace a cloud computing předmět](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NSWI150)
 
-### Modely cloudových služeb:
+### **Modely cloudových služeb**
 
 - **Software as a Service (SaaS):**
 
@@ -913,78 +917,72 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 
 ![alt](./images/cloud_models.png)
 
-### Spojeni Cloud computingu a Big Data
+### **Spojení Cloud computingu a Big Data**
 
 - nemusime resit drahy HW, instalaci a udrzbu
 - jednoducha skalovatelnost
 - nevyhoda je vendor lock-in
 
-# Key-value databaze
+# **Key-value databaze**
 
 - prakticky hash table
 - hodnota je BLOB (nespecifikovany typ a struktura - muze byt cokoliv)
 
-## Priklady
+## **Vhodna vyuziti key-value databází**
 
-- Riak
-- Redis
-- MemcachedDB
-
-## Vhodna vyuziti
-
-- ### Session info
+- ### **Session info**
   - klicem je `session_id`
   - k ulozeni session staci `put` a pro dotaz jednoduchy `get`
-- ### Nakupni kosiky
+- ### **Nakupni kosiky**
   - podobne jako Session info
-- ### User preference
+- ### **User preference**
 
-## Nevhodna vyuziti
+## **Nevhodna vyuziti key-value databází**
 
-- ### Vztahy mezi daty
-- ### Transakce s vice operacemi
+- ### **Vztahy mezi daty**
+- ### **Transakce s vice operacemi**
   - Ukladame vice klicu -> jedno selhani -> zadny z klicu v transakci se neulozi (revert / roll back)
-- ### Dotazy na obsah dat
+- ### **Dotazy na obsah dat**
 
-## Dotazovani
+## **Dotazovani**
 
-- dotazujeme se pomoci klice
-- pomoci obsahu dat neni mozne (BLOB -> data nemusi byt jakkoliv definovana)
+- dotazujeme se pomoci **klice**
+- pomoci obsahu dat neni mozne (**BLOB** -> data nemusi byt jakkoliv definovana)
 - klice jsou generovany nejakym algoritmem (auto incremenet), user generated nebo treba time stamps
 
-# Riak (Key-value -> multimodel)
+# **Riak (Key-value -> multimodel)**
 
 - open source
 
-## Terminologie
+## **Terminologie**
 
-- ### `bucket` = namespace pro klice
+- ### **bucket** = namespace pro klice
   - lze pro bucket nastavit replikacni faktor `n_val`
   - `allow_mult` - konkurentni updaty
   - `/riak/<bucket>/<key>`
-- ### `ring`
-- ### `hinted handoff`
-- ### `gossiping`
+- ### **riak ring**
+- ### **hinted handoff**
+- ### **gossiping**
 
 ![alt](./images/riak_terminology.png)
 
-## Principy
+## **Principy Riaku**
 
 - klice jsou ukladany do bucketů (= namespaces)
-- default interface je `HTTP`
+- default interface je **HTTP**
 
-## Riak Links
+## **Riak Links**
 
 - umoznuji tvorit vztahy mezi objekty
 - tvori se pridanim `Link` headeru k objektu (pres HTTP)
 
-## Riak Search
+## **Riak Search**
 
 - fulltext search engine
 - podpora dotazovani na textova data
 - pouziti pro hledani zaznamu podle obsahu
 
-### Dotazování v Riak Search
+### **Dotazování v Riak Search**
 
 - **Typy dotazů:**
   - **Zástupné znaky:** `Bus*`, `Bus?`
@@ -996,7 +994,7 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
   - **Blízkost:**
     - `"See spot run"~20`: slova v rámci 20 slov
 
-### Proces indexace dat v Riak Search:
+### **Proces indexace dat v Riak Search**
 
 1. Načtení dokumentu
 2. Rozdělení na pole
@@ -1016,11 +1014,9 @@ index <INDEX> <PATH>
 search <INDEX> <QUERY>
 ```
 
-## Priklady Riaku
+## **Příklady použití Riaku**
 
-### **Příklady použití Riaku**
-
-#### **Práce s Buckets:**
+### **Práce s Buckets v Riaku**
 
 1. **Seznam všech buckets:**
 
@@ -1041,7 +1037,7 @@ search <INDEX> <QUERY>
 
 ---
 
-#### **Práce s daty:**
+### **Práce s daty v Riaku**
 
 1. **Uložení prostého textu do bucketu `foo`:**
 
@@ -1074,7 +1070,7 @@ search <INDEX> <QUERY>
 
 ---
 
-#### **Práce s Riak Links:**
+### **Práce s Riak Links**
 
 1. **Přidání alba a propojení s performerem:**
 
@@ -1093,7 +1089,7 @@ search <INDEX> <QUERY>
    curl -i http://localhost:10011/riak/albums/TheRiver/artists,_,0/artists,collaborator,1
    ```
 
-## Interni mechanismy Riaku
+## **Interni mechanismy Riaku**
 
 - `BASE` principy
 - pouziva `quora`
@@ -1116,21 +1112,21 @@ search <INDEX> <QUERY>
   - **Tolerované výpadky při zápisu:**
     - Cluster zvládne výpadek až **`N - W = 2`** uzlů a stále může provádět zápisy
 
-## Clustering v Riaku
+## **Clustering v Riaku**
 
 - bez mastera -> kazdy uzel muze obslouzit jakykoliv dotaz
 
 - ### Konzistentni hashovani
 
   - hashovaci funkce mapuje klice do kruhu
-  - kazdy uzel zodpovedny za interval hashu (= `slot`) na kruhu
+  - kazdy uzel zodpovedny za interval hashu (= **slot**) na kruhu
   - prumerne remapujeme jen `k / n` klicu, kde `k` = pocet klicu a `n` = pocet slotu
 
-## Riak Ring
+## **Riak Ring**
 
 - stred kazdeho clusteru
 - `160-bitovy` prostor celych cisel rozdeleny na rovnomerne intervaly
-- ### Kazdy `fyzicky uzel` ma `virtualni uzly` (= vnodes)
+- ### Kazdy **fyzicky uzel** ma **virtualni uzly** (= vnodes)
 
   - virtualni uzel je zodpovedny za cast klicu
   - kazdy fyzicky uzel ma na starost `1/ (pocet fyzickych uzlu)` ringu
@@ -1140,19 +1136,19 @@ $$
 \text{|vnodes\_na\_1\_uzlu|} = \frac{|partitions|}{\text{|fyzicke\_uzly|}}
 $$
 
-- ### Priklad:
+- ### **Priklad**:
   - Ring s `32` paritions
   - `4` fyzicke uzly
   - `8` vnodes na fyzicky uzel
 
 ![alt text](./images/riak_ring_e1.png)
 
-## Replikace v Riaku
+## **Replikace v Riaku**
 
 - nastavujeme `N value` (default = 3)
 - objekty dedi `N value` z jejich bucketu
 
-### Hinted kandoff
+### **Hinted handoff**
 
 - resi selhani uzlu
 - funguje diky replikaci
@@ -1166,7 +1162,7 @@ $$
 
 ![alt](./images/hinted_handoff.png)
 
-## Gossip protokol
+## **Gossip protokol**
 
 - robustni sireni informaci
 - `Gossiping` = posilani informaci nahodnemu uzlu
@@ -1175,7 +1171,7 @@ $$
   - periodicky
   - pri zmene na ringu
 
-## Vector clocks
+## **Vector clocks**
 
 - kazdy uzel muze zpracovavat dotaz -> jaka verze hodnoty je ale aktualni?
 - reseni: vector clocks
@@ -1183,13 +1179,13 @@ $$
 - ulozeno v headeru objektu
 - pri kazdem updatu je hodnota vector clocku aktualizovana
 
-## Riak siblings
+## **Riak siblings**
 
-- `siblings` = vicero objektu pod jednim klicem
+- **siblings** = vicero objektu pod jednim klicem
 - aktivovano `allow_mult = true` priznakem
 - mohou vzniknout pri konkurentnim zapisu, starych vector clocks, neexistujicich vector clocks
 
-## Koordinující uzel (vnode) v Riaku
+## **Koordinující uzel (vnode) v Riaku**
 
 1. Najde **vnode** pro klíč pomocí hashovací funkce.
 2. Určí další **N-1 vnodes** pro repliky.
@@ -1197,31 +1193,29 @@ $$
 4. Čeká, dokud dostatečný počet odpovědí nesplní **kvórum** (pro čtení/zápis).
 5. Vrátí výsledek klientovi.
 
-# Redis (Key-value + multi-model)
+# **Redis (Key-value + multi-model)**
 
 - spise dokumentova multi-model databaze s podporou key-value
 
-## Terminologie
+## **Terminologie Redisu**
 
-## Principy
+## **Principy Redisu**
 
-- klice jsou `binary safe` -> jakakoliv bina rni posloupnost muze byt klicem (tedy neni omezeni na text nebo citelny obsah)
+- klice jsou **binary safe** -> jakakoliv bina rni posloupnost muze byt klicem (tedy neni omezeni na text nebo citelny obsah)
 - hodnota muze byt jakykoliv objekt (string, hash, list, set...)
 - podpora pro mnozinove operace (range, diff, union, intersection)
 
-### In-Memory Data Set
+### **In-Memory Data Set**
 
 - data jsou primarne ulozena v pameti
 - persistence je resena dumpingem datasetu na disk / pridanim prikazu do logu
 
-### Publish/subscribe
-
-### Cache-like chovani
+### **Cache-like chovani Redisu**
 
 - klice mohou mit nastaveny `TTL`
 - pak jsou automaticky vymazany -> cache charackteristika
 
-## Datove typy Redisu
+## **Datove typy Redisu**
 
 ### **String**
 
@@ -1334,9 +1328,9 @@ OK
 4) "25"
 ```
 
-## Transakce v Redisu
+## **Transakce v Redisu**
 
-- kazdy prikaz je atomicky
+- kazdy prikaz je **atomicky**
 - podporuje transakce pri pouziti vice prikazu (zachova poradi) -> vse v jedne atomicke operaci
 - bez roll backu
 
@@ -1352,7 +1346,7 @@ QUEUED
 2) (integer) 1
 ```
 
-## Replikace v Redisu (master-slave)
+## **Replikace v Redisu (master-slave)**
 
 - master-slave
   - master ma vice slavu
@@ -1362,7 +1356,7 @@ QUEUED
 - replikace je `neblokujici` na strane `slavu`
 - pri syncu slavu slave pracuje dal
 
-## Synchronizace v Redisu
+## **Synchronizace v Redisu**
 
 1. Po připojení k masteru slave odešle příkaz **SYNC**.
 2. Master spustí **background saving** a začne ukládat nové příkazy do bufferu.
@@ -1370,9 +1364,9 @@ QUEUED
 4. Slave uloží soubor na disk a načte jej do paměti.
 5. Master pošle slave také všechny **bufferované příkazy**.
 
-## Sharding v Redisu
+## **Sharding v Redisu**
 
-### Redis Cluster (od verze 3.1)
+### **Redis Cluster (od verze 3.1)**
 
 - **Nepoužívá konzistentní hashování.**
 - Klíče jsou přiřazeny do **16384 hash slotů** (CRC16 klíče modulo 16384).
@@ -1389,21 +1383,21 @@ QUEUED
 
 **Bez přerušení provozu:** Přesun hash slotů probíhá bez nutnosti zastavit systém.
 
-## Redis sentinel
+## **Redis sentinel**
 
 - system pro managing Redis instanci
 - monitorovani, notifikace, automaticky failover
 
-# Sloupcove databaze
+# **Sloupcove databaze**
 
 - **Column-oriented DBMS:** Ukládá data tabulek ve formě sloupců místo řádků (není nutně NoSQL).
 - **Column-family DBMS:** NoSQL databáze, která podporuje tabulky s různým počtem a typy sloupců.
 
-## Terminologie
+## **Terminologie**
 
-- `column family` = neco jako `table` v relacnich = radky s mnoha sloupci asociovane s `row key`
+- **column family** = neco jako **table** v relacnich = radky s mnoha sloupci asociovane s **row key**
 - data uchovava jako sloupce
-  - datove zaznamy jsou mapovany na rowIDs
+  - datove zaznamy jsou mapovany na **rowIDs**
     ```
     10:001,12:002,11:003,22:004;
     Smith:001,Jones:002,Johnson:003,Jones:004;
@@ -1411,26 +1405,26 @@ QUEUED
 
 ![alt](./images/column_family.png)
 
-## Vhodna vyuziti
+## **Vhodna vyuziti sloupcovych databazi**
 
 - ### Event logging
 
 - ### CMS, Blogy
 
-## Nevhodna vyuziti
+## **Nevhodna vyuziti sloupcovych databazi**
 
 - ### Systemy vyzadujici ACID vlastnosti
 
 - ### Agregovani dat v dotazech
 
-# Cassandra (sloupcove -> multimodel)
+# **Cassandra (sloupcove -> multimodel)**
 
 - Vyvinuta ve FB
 - Ma vlastni query jazyk `CQL`
 
-## Terminologie
+## **Terminologie**
 
-- ### Column = zakladni jednotka
+- ### **Column** = zakladni jednotka
 
   - Name + value + timestamp
   - `name` je klic
@@ -1449,35 +1443,35 @@ QUEUED
     |                       | `Order_002`             | `date: 2024-12-05`, `total: $75` |
     | `456`                 | `Order_001`             | `date: 2024-11-30`, `total: $30` |
 
-- ### Row = kolekce sloupcu spojenych ke klici
-- ### Column family = kolekce podobnych `rows`
+- ### **Row** = kolekce sloupcu spojenych ke klici
+- ### **Column family** = kolekce podobnych `rows`
   ![alt](./images/cassandra_terminology.png)
 
-## Column families
+## **Column families**
 
 - musime specifikovat `key`
 - `Comparator` = datovy typ pro jmenou sloupce
 - `Validator` = datovy typ pro hodnotu sloupce
 
-### Staticke
+### **Staticke column families**
 
 - jako tabulka v relacni db
 - vsechny radky maji stejnou sadu sloupcu
 - povolujeme null -> kazdy sloupec nemusi mit hodnotu
 
-### Dynamicke
+### **Dynamicke column families**
 
 - dynamicky generovane sloupce
 - ulozena v jednom radku pro efektivni ziskani dat
 - v tomto kontextu je `row` neco jako snapshost dat / materialiaovany `view` -> efektivnejsi
 
-## Typy kolekci v CQL
+## **Typy kolekci v CQL**
 
 - `set` - mnozina -> jedinecne hodnoty, vraci v abecednim poradi
 - `list` -> serazene a vraci podle indexu
 - `map` -> name + value pary
 
-## CQL - Cassandra query language
+## **CQL - Cassandra query language**
 
 ### **1. Operace s Keyspace**
 
@@ -1876,12 +1870,12 @@ ORDER BY lastname ASC
 ALLOW FILTERING;
 ```
 
-## Zapisy
+## **Zapisy v Cassandře**
 
 - zapis je atomicky na urovni radku
 - Memtable a SSTable jsou udrzovany pro kazdy table
 
-### Prubeh zapisu
+### **Prubeh zapisu v Cassandře**
 
 1. Pri zapisu jsou data ulozena v pameti -> `memtable`
 2. Zapis je pridan do `commit logu` na disku (durability)
@@ -1890,7 +1884,7 @@ ALLOW FILTERING;
 
 ![alt](./images/cassandra_write.png)
 
-### SSTable
+### **SSTable**
 
 - = Sorted string table
 - `SSTable` je immutable
@@ -1900,7 +1894,7 @@ ALLOW FILTERING;
   - `partition index` -> lokalizace dat
   - `partition summary` -> vice rozseka
 
-### Write Request
+### **Write Request v Cassandře**
 
 - request zpracovava jakykoliv uzel -> stava se z nej `coordinator`
   - komunikuje mezi klientem a ostatnimi uzly s replikami
@@ -1908,13 +1902,13 @@ ALLOW FILTERING;
 - `Write consistency level` = kolik replik musi uspet
   - uspech = data jsou zapsana do commit logu a memtablu
 
-## Cteni
+## **Cteni v Cassandře**
 
 - typy read requestu:
   - primy read reqeust
   - background read repair request
 
-### Prubeh cteni v Cassandre:
+### **Prubeh cteni v Cassandře**
 
 1. **Koordinátor kontaktuje repliky podle úrovně konzistence.**
 
@@ -1968,14 +1962,14 @@ ALLOW FILTERING;
 - **Pravidelná oprava uzlů (node repair):**
   - Správci musí pravidelně spouštět opravy uzlů, aby se předešlo situacím, kdy by některé repliky měly stará data.
 
-## Compaction process
+## **Compaction process**
 
 - Cassandra **nevkládá/neupravuje/nesmaže data přímo na místě**:
   - **Vkládání/úpravy:** Vytvoří novou verzi dat s časovou značkou v nové SSTable.
   - **Mazání:** Označení dat pomocí tombstonu.
 - Compaction robíhá pravidelně, aby byla data sloučena a zoptimalizována.
 
-### Kroky Compaction
+### **Kroky Compaction**
 
 1. **Sloučení dat z SSTables** podle partition key:
 
@@ -1992,24 +1986,24 @@ ALLOW FILTERING;
 
 ![alt](./images/compaction_process.png)
 
-## Architektura
+## **Architektura Cassandry**
 
 - peer-to-peer disribuovany system
 - `Coordinator` = jakykoliv uzel zodpovedny za komunikaci s klientem
 
-## Virtual Nodes
+## **Virtual Nodes Cassandry**
 
 - kazdy uzel muze vlastnit velke mnozstvi malych partici
 
 ![alt](./images/cassandra_vnodes.png)
 
-## Gossip
+## **Gossip protokol v Cassandře**
 
 - bezi kazdou sekundu
 - vymena info s max 3 uzly
 - kazda `Gossip message` ma informace o zdroji a verzi
 
-### Partitioner
+### **Partitioner**
 
 - **Úloha:** Rozděluje data mezi uzly (včetně replik).
 - **Typy:**
@@ -2017,11 +2011,7 @@ ALLOW FILTERING;
   - **RandomPartitioner:** Uniformní distribuce pomocí MD5 (dřívější výchozí).
   - **ByteOrderedPartitioner:** Řadí řádky lexikálně podle bajtů klíče, vhodné pro **ordered scans**, ale problémy s vyvažováním zátěže.
 
-## Replikace
-
-- Pokud je replikacni faktor prevysen, zapisy nejsou provadeny
-
-### **Replikace**
+## **Replikace**
 
 - Pokud je replikační faktor překročen, **zápisy nejsou prováděny**.
 - typicky 2-3 repliky
@@ -2046,50 +2036,50 @@ ALLOW FILTERING;
      - Pokud uzel v jiném racku není k dispozici, replika se umístí na jiný uzel ve stejném racku.
 - **Počet replik na datové centrum je konfigurovatelný.**
 
-## Snitch
+## **Snitch**
 
 - komponenta Cassandry informujici o sitove topologii
 
-# Dokumentove databaze
+# **Dokumentove databaze**
 
 - hodnoty jsou ukladany jako dokumenty
   - dokumenty = hierarchicke formaty XML, JSON apod.
   - hodnota zaznamu = dokument
 - ocekavame podobnou strukturu dokumentu v kolekci
 
-## Vhodna vyuziti
+## **Vhodna vyuziti sloupcových databází**
 
-- ### Event logging
-- ### CMS, blogy
-- ### Webova analytika
-- ### E-Commerce
+- ### **Event logging**
+- ### **CMS, blogy**
+- ### **Webova analytika**
+- ### **E-Commerce**
 
-## Nevhodna vyuziti
+## **Nevhodna vyuziti sloupcových databází**
 
-- ### Koplexni transakce pres vice operaci
-- ### Agregovane dotazy
+- ### **Koplexni transakce pres vice operaci**
+- ### A**gregovane dotazy**
 
-# MongoDB (dokumentove)
+# **MongoDB (dokumentove)**
 
-- pouziva JSON dokumenty
+- pouziva **JSON** dokumenty
 - podpora indexace
 - mapreduce popora
 - vysoka dostupnost
 
 ![alt](./images/mongodb_terminology.png)
 
-## Dokumenty v MongoDB
+## **Dokumenty v MongoDB**
 
-- vyuziva JSON
-- ulozeno jako BSON - binarni JSON
+- vyuziva **JSON**
+- ulozeno jako **BSON** - binarni JSON
 - omezeni na nazvy prvku (`_id` je rezervovano, `$` nemuze byt na zacatku, `.` nesmi byt vubec)
 
-## Datovy model
+## **Datovy model**
 
 - kolekce nevynucuji strukturu dat
 - dulezite rozhodnuti je zda vyuzivat reference nebo embedovat dokumenty
 
-### Reference
+### **Reference**
 
 - normalizovany datovy model
 - reference z jednoho dokumentu na dalsi
@@ -2099,7 +2089,7 @@ ALLOW FILTERING;
 
 ![alt](./images/mongodb_references.png)
 
-### Embedded data
+### **Embedded data**
 
 - denormalizovany datovy model
 - subdokumenty
@@ -2113,7 +2103,7 @@ ALLOW FILTERING;
 
 ---
 
-### **Vkládání dat**
+### **Vkládání dat v MongoDB**
 
 - **Vložení dokumentu:**
 
@@ -2348,18 +2338,18 @@ ALLOW FILTERING;
   db.collection.ensureIndex({ _id: "hashed" });
   ```
 
-## Replikace
+## **Replikace v MongoDB**
 
 - master/slave
 - `replica set` = skupina instanci hostujici stejny dataset (kazdy ma svoji kopii)
 
-### Primarni uzel
+### **Primarni uzel**
 
 - master
 - prijima vsechny write operace
 - zapisuje do `oplogu`
 
-### Sekundarni uzly
+### **Sekundarni uzly**
 
 - slave
 - cte z `oplogu` mastera
@@ -2466,14 +2456,14 @@ ALLOW FILTERING;
      - Kandidát není synchronizován s nejnovější operací v replica setu.
      - Kandidát má nižší prioritu než jiný oprávněný člen.
 
-## Arbiter
+## **Arbiter**
 
 - specialni uzel
 - neuchovava dataset
 - nemuze byt primary
 - je pouze pro hlasovani ve volbach (pro repliky se sudym poctem hlasujicich)
 
-## Sharding
+## **Sharding v MongoDB**
 
 ### **Sharded Clusters v MongoDB**
 
@@ -2489,7 +2479,7 @@ ALLOW FILTERING;
 
 ![alt](./images/mongo_sharding.png)
 
-## Partitioning dat
+## **Partitioning dat**
 
 ### **Data Partitioning v MongoDB**
 
@@ -2514,7 +2504,7 @@ ALLOW FILTERING;
   - **Malé chunky:** Rovnoměrnější distribuce, ale častější migrace.
   - **Velké chunky:** Méně migrací, ale nerovnoměrné zatížení.
 
-## Journaling
+## **Journaling v MongoDB**
 
 - **Co dělá:** Ukládá zápisové operace do paměti a journalu před aplikací na data.
 - **Účel:** Obnovení konzistence databáze po tvrdém vypnutí.
@@ -2526,7 +2516,7 @@ ALLOW FILTERING;
 
 ## **Two-Phase Commit v MongoDB**
 
-### Transakce přes více dokumentů:
+### **Transakce přes více dokumentů**
 
 - Když operace zahrnuje více dokumentů (např. změny v několika kolekcích), MongoDB podporuje multi-document transactions, které zajišťují transakční vlastnosti (ACID) pro více dokumentů najednou.
 
@@ -2638,17 +2628,17 @@ ALLOW FILTERING;
   ```
   - Tímto způsobem se transakce přiřadí konkrétní aplikaci a zajistí se atomická změna.
 
-# Grafove databaze
+# **Grafove databaze**
 
 - umoznuji modelovat komplexni vztahy mezi objekty
 - vztahy jsou persistentni a nejsou vypocteny behem dotazu narozdil od relacnnich dbs
 
-# Neo4J (grafove)
+# **Neo4J (grafove)**
 
 - ma plne ACID vlastnosti
 - otpimalizovana pro propojena data
 
-## Principy
+## **Principy Neo4J**
 
 - zakladni jednotkou je uzel + vztahy
 - uzly a vztahy mohou obsahovat vlastnosti (key/value pary)
@@ -2683,7 +2673,7 @@ ALLOW FILTERING;
 5. **Startovací uzly:**
    - Uzly, kde průchod grafem začíná.
 
-## Gremlin
+## **Gremlin**
 
 - jazek pro graph traversal
 - open source, vyvijen TinkerPopem
@@ -2691,7 +2681,7 @@ ALLOW FILTERING;
 
 ![alt](./images/gremlin_property_graph.png)
 
-## Cypher
+## **Cypher**
 
 - grafovy dotazovaci jazyk pro Neo4J
 - dotazy a updaty
@@ -2792,7 +2782,7 @@ ALLOW FILTERING;
 - **Operátory:**
   - Výkonné nástroje pro práci s daty v grafech.
 
-## Mnagamenet transakci
+## **Mnagamenet transakci v Neo4J**
 
 - neo4j ma podporu ACID vlastnosti
 - vsechny zapisy v grafu musi byt provedeny v transakci
@@ -2836,17 +2826,17 @@ ALLOW FILTERING;
 - **Vztahy připojené k uzlu:**
   - Pokud jsou k uzlu připojeny vztahy, budou smazány také.
 
-## Indexace
+## **Indexace**
 
 - maji jedinecne, uzivatelem specifikovane jmeno
 - indexovat lze uzly a vztahy
 
-## Automaticka indexace
+## **Automaticka indexace**
 
 - jeden automaticky index pro uzly a jeden pro vztahy
   - defaultne vypnuto
 
-## High availability
+## **High availability**
 
 - transakce jsou atomicke, isolovane, durable, ale pro `C` jsou eventualne propagovane slavum
 - umoznuje fault-tolerantni databazi
@@ -2857,22 +2847,22 @@ ALLOW FILTERING;
   - pokud cluster existuje, stane se slavem
   - jinak se stava masterem
 
-### Zapis na masterovi
+### **Zapis na masterovi**
 
 - je eventelne propagon do slavu
 
-### Zapis na slavovi
+### **Zapis na slavovi**
 
 - je ihned synced s masterem
 - operace je provedena u slava a taky u mastera
 
-## Data na disku
+## **Data na disku**
 
 - linked list zaznamu
 - properties = linked list property zaznamu
   - key + value + ref na dalsi vlastnost
 
-# Multimodel databaze
+# **Multimodel databaze**
 
 - u big data prichazi problem s Variety
 - podpora vice datovych modelu v jednom integrovanem BE
@@ -2886,7 +2876,7 @@ ALLOW FILTERING;
   - nezrale a stale ve vyvoji
 - Priklady: ArangoDB, OrientDB
 
-## Polyglotni persistence
+## **Polyglotni persistence**
 
 - idea: pouzit sparvny nastroj pro dany ukol
 - pro nejaka data tedy vyuzijeme grafovou db, pro jina key/value apod.
@@ -2897,18 +2887,18 @@ ALLOW FILTERING;
   - integrace vsech ruznych db
   - cross model dotazy a transakce
 
-## ArangoDB (dokumentova -> multimodel)
+## **ArangoDB (dokumentova -> multimodel)**
 
 - dokumenty, grafy, key/value
 - uklada vsechna data jako dokumenty
 
-## OrientDB (grafova -> multimodel)
+## **OrientDB (grafova -> multimodel)**
 
 - dokumentovy, grafy, key/value, objekty
 - vztahy jsou reseny jako v grafovych db s hranami mezi zaznamy
 - dotazy v SQL pro rozsireny graph traversal
 
-## Techniky rozsireni k multimodelu
+## **Techniky rozsireni k multimodelu**
 
 - nejvice typ multimodel dbs jsou relacni
 
@@ -2931,34 +2921,32 @@ ALLOW FILTERING;
 - **Model embedding:** Vnoření jednoho modelu do druhého.
 - **Cross-model redundancy:** Redundance dat mezi modely.
 
-## Zpracovavani multimodel dotazu
+## **Zpracovavani multimodel dotazu**
 
 - typicky chceme stavet na uz funkcnim dotazovacim systemu
 - optimalizace dotazu probiha nejcasteji pomoci B-tree/B+-tree indexu
 
-## Vyzvy mutlimodel databazi
+## **Vyzvy mutlimodel databazi**
 
 ![alt](./images/multimodel_challenges.png)
 
-# Polystores
+# **Polystores**
 
 - slozitym problemem je **variety** -> motivuje multimodel dbs a polystores
 - propojuje vice technologii pro ukladani dat -> vybirama na zaklade vyuziti aplikaci
 - vyuzivaji nejvhodnejsi nastroje pro kazdy dilci ukol
 
-## Vyhody a nevyhody
-
-### Vyhody
+## **Vyhody polystorů**
 
 - dobra skalovatelnost
 - prenositelne znalosti ze single modelu
 
-### Nevyhody
+## **Nevyhody polystorů**
 
 - nutnost specialistu pro integraci ruznych dbs
 - cross-model dotazy a transakce
 
-## Typy Polystoru
+## **Typy polystoru**
 
 1. **Loosely-coupled**
 
@@ -2979,7 +2967,7 @@ ALLOW FILTERING;
 
 ![alt](./images/polystore_types.png)
 
-## Dimenze polystoru
+## **Dimenze polystoru**
 
 ### **Klíčové vlastnosti polystorů**
 
@@ -3002,12 +2990,12 @@ ALLOW FILTERING;
 5. **Optimalita:**
    - plány a optimální umístění dat
 
-## 1. Tightly integrated polystores (= TIPs)
+## **1. Tightly integrated polystores (= TIPs)**
 
 ![alt](./images/polystores_tips.png)
 ![alt](./images/polystores_tight.png)
 
-## 2. Loosely Integrated Polystores
+## **2. Loosely Integrated Polystores**
 
 ### **Kroky**
 
@@ -3020,26 +3008,26 @@ ALLOW FILTERING;
 
 ![alt](./images/polystores_loose.png)
 
-## 3. Hybridni Polystory
+## **3. Hybridni Polystory**
 
 - vyuzivaji mediator-wrapper architekturu
 - prikladem je `BigDAWG`
 
 ![alt](./images/polystores_hybrid.png)
 
-# NewSQL databaze
+# **NewSQL databaze**
 
 - novy / alternativno pristup k SQL DBMS
 - **idea:** skalovatelne uloziste + funkcionalita tradicnich relacnich dbs
   - ACID vlastnosti, relacni model, SQL pristup
 - napriklad realizovano cloudem: Microsoft Azure
 
-## Motivace NewSQL
+## **Motivace NewSQL**
 
 - aplikace fungujici na relacnim modelu potrebuji zachazet s neustale vetsimi daty -> nutnost skalovat
 - aplikace vyzadujici silnou konzistenci a skalovatelnost
 
-## VoltDB (NewSQL)
+## **VoltDB (NewSQL)**
 
 - z perspektivy uzivatele klasicky relacni DBMS
 - shared-nothing archikektura
@@ -3049,16 +3037,16 @@ ALLOW FILTERING;
 
 > pozorovani: tradicni databaze provadi skutecnou praci mene nez 10 % casu
 
-# Array databaze (databaze polí)
+# **Array databaze (databaze polí)**
 
 - specificky pro data reprezentovana jako n-dimenzionalni pole
 
-## Vhodna vyuziti
+## **Vhodna vyuziti array databazi**
 
 - ### Zaznamy hodnot v case
   - biologie, chemie, fyzika, geologie
 
-# SciDB (array)
+# **SciDB (array)**
 
 - datovy model: multidimenzionalni sorted array
 - predpoklad: data nejsou prepisovana
@@ -3067,12 +3055,12 @@ ALLOW FILTERING;
 
 ![alt](./images/array_cell.png)
 
-## AQL (Array Query language)
+## **AQL (Array Query language)**
 
 - misto tables pracujeme s arrays
 - kompilovano do AFL (array functional language)
 
-### Pole v AQL
+### **Pole v AQL**
 
 - obsahuje jmeno a serazeny list s pojmenovanymi dimenzemi
 - ma alespon jeden atribut s datovym typem
@@ -3081,27 +3069,27 @@ ALLOW FILTERING;
   - souradnice (0 - 99)
 - zakladni hodnotu atributu specifikujeme pomoci `missing code` (= `null` v SQL)
 
-### Bunka v poli
+### **Bunka v poli**
 
 - jmeno
 - datovy typ
 - nullability
 - default value
 
-## Vyhodnocovani dotazu
+## **Vyhodnocovani dotazu**
 
 - dotaz: serie operatoru
 - provadi optimalizace jako SQL v relacni algebre
   - posunuti operatoru, nahrazeni sekvence operatoru efektivnejsi apod.
 
-## Docasna pole
+## **Docasna pole**
 
 - mohou zlepsit vykonost
 - negaratuji ACID vlastnosti
 - nejsou persistnenti (jen in memory)
 - bez verzi
 
-## Multidimensional Array Clustering
+## **Multidimensional Array Clustering**
 
 1. **Organizace dat:**
 
@@ -3118,59 +3106,59 @@ ALLOW FILTERING;
    - Zvyšuje výkon dotazů na **okna** bez potřeby speciálního programování
    - Vyžaduje více úložného prostoru, ale urychluje operace
 
-# Search Enginy
+# **Search Enginy**
 
 - neni pozadavek na pevnou strukturu dat narozdil od relacnich DBMS
 
-## Vhodna vyuziti
+## **Vhodna vyuziti search enginu**
 
 - ### Fulltext search
 - ### Log analysis
 - ### Relevance-based search
 
-# ElasticSearch
+# **ElasticSearch**
 
 - distribuovany full-text search engine
 - HTTP web interface
 - skoro real time vyhledavani
 
-## Index
+## **Index v ElasticSearch**
 
 - kolekce dokumentu s podobnou charakteristikou
 - vzdy pojmenovany
 - indexy lze shardovat a pak replikovat
 
-### Tvorba indexu
+### **Tvorba indexu**
 
 - definujeme pocet shardu a replik
 - kazdy shard je sam o sobe funkcni index
 
-# Transakce
+# **Transakce**
 
 - **business transakce** = serie systemovych transakci
 - **offline concurrency** = manipulaci s daty a az potom je ulozime
 
   > Uživatel načte objednávky, upraví je lokálně a pak výsledky uloží zpět do databáze.
 
-## Problémy
+## **Problémy**
 
 ![alt](./images/transaction_problems.png)
 
-## Optimisticky offline lock
+## **Optimisticky offline lock**
 
 - predpoklada **nizkou sanci konfliktu**
 - **Pred commitem**:
   1. Klient znovu precte data, se kterymi business transakce manipuluje
   2. Kontrola zda se prectena data nezmenila od zacatku business transakce
 
-## Pesimisticky offline lock
+## **Pesimisticky offline lock**
 
 - dovoluje pouze jedne business transakci pristupovat k danym datum
 - nutnost uzamknout data business transakcí predtim nez je zacne pouzivat
 - standartni problem: deadlock
   - muzeme resit timeout aplikace nebo timestampem locku
 
-## Coarse-grained Lock
+## **Coarse-grained Lock**
 
 - pokryva vice souvisejicich zdroju najednou (skupinu)
 - vhodne v moment, kdy objekty potrebujeme upravovat jako skupinu
@@ -3178,15 +3166,15 @@ ALLOW FILTERING;
 
 ![alt](./images/coarse_grained_lock.png)
 
-## Implicit lock
+## **Implicit lock**
 
 - zamky jsou ziskany automaticky aplikaci
 
-# Performance Tuning
+# **Performance Tuning**
 
 - MapReduce umoznuje horizontalni skalovani bez bottlenecku
 
-## Linearni skalovatelnost
+## **Linearni skalovatelnost**
 
 - **Předpoklad:** Úlohy lze paralelizovat do rovnoměrně rozložených jednotek.
 
@@ -3195,8 +3183,6 @@ ALLOW FILTERING;
 - **Lineární škálovatelnost**:
   - Jeden uzel může zpracovat **`x` MB/s**.
   - **`n` uzlů** může zpracovat **`x × n` MB/s**.
-
-### **Vzorce:**
 
 1. **Čas pro zpracování dat na jednom uzlu:**
 
@@ -3208,7 +3194,7 @@ ALLOW FILTERING;
    - **`t / n`**, kde:
      - `n`: počet uzlů.
 
-## Amdahluv zakon
+## **Amdahluv zakon**
 
 - vzorec pro nalezeni maximalniho zlepseni vykonu systemu po vylepseni jeho casti
 - `P` = cast programu, ktera je paralelizovana
@@ -3234,7 +3220,7 @@ $$
 
 - **Výsledek:** Program může být maximálně **11,9krát rychlejší**, pokud je paralelizace perfektní.
 
-## Littluv zakon
+## **Littluv zakon**
 
 - **Analýza zatížení stabilních systémů:**
   - Zákazník vstoupí do fronty a je obsloužen během konečného času.
@@ -3264,7 +3250,7 @@ $$ L = 4 \cdot 0.25 = 1 $$
 
 - **Důsledek:** Pokud přijde více než 4 zákazníci za hodinu, vznikne **bottleneck**
 
-## Message cost model
+## **Message cost model**
 
 - Náklady na odeslání zprávy z jednoho konce na druhý se skládají z fixních a variabilních složek.
 - `C`: celkové náklady na odeslání zprávy.
