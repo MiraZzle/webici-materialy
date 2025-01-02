@@ -2997,7 +2997,7 @@ ALLOW FILTERING;
 5. **Optimalita:**
    - plány a optimální umístění dat
 
-## 1. Tightly integrated polystores (TIPs)
+## 1. Tightly integrated polystores (= TIPs)
 
 ![alt](./images/polystores_tips.png)
 ![alt](./images/polystores_tight.png)
@@ -3022,4 +3022,122 @@ ALLOW FILTERING;
 
 ![alt](./images/polystores_hybrid.png)
 
-# Advanced
+# NewSQL databaze
+
+- novy / alternativno pristup k SQL DBMS
+- **idea:** skalovatelne uloziste + funkcionalita tradicnich relacnich dbs
+  - ACID vlastnosti, relacni model, SQL pristup
+- napriklad realizovano cloudem: Microsoft Azure
+
+## Motivace NewSQL
+
+- aplikace fungujici na relacnim modelu potrebuji zachazet s neustale vetsimi daty -> nutnost skalovat
+- aplikace vyzadujici silnou konzistenci a skalovatelnost
+
+## VoltDB (NewSQL)
+
+- z perspektivy uzivatele klasicky relacni DBMS
+- shared-nothing archikektura
+  - uzly v clusteru nesdili pamet, disk apod.
+  - casti jsou autonomni a komunikuji skrze zpravy
+- in-memory databaze -> durability je resena command logem / snapshoty
+
+> pozorovani: tradicni databaze provadi skutecnou praci mene nez 10 % casu
+
+# Array databaze (databaze polí)
+
+- specificky pro data reprezentovana jako n-dimenzionalni pole
+
+## Vhodna vyuziti
+
+- ### Zaznamy hodnot v case
+  - biologie, chemie, fyzika, geologie
+
+# SciDB (array)
+
+- datovy model: multidimenzionalni sorted array
+- predpoklad: data nejsou prepisovana
+  - update = nova verze dat
+- distribuuje chunky dat
+
+![alt](./images/array_cell.png)
+
+## AQL (Array Query language)
+
+- misto tables pracujeme s arrays
+- kompilovano do AFL (array functional language)
+
+### Pole v AQL
+
+- obsahuje jmeno a serazeny list s pojmenovanymi dimenzemi
+- ma alespon jeden atribut s datovym typem
+- aspon jednu dimenzi
+- kazda dimenze ma:
+  - souradnice (0 - 99)
+- zakladni hodnotu atributu specifikujeme pomoci `missing code` (= `null` v SQL)
+
+### Bunka v poli
+
+- jmeno
+- datovy typ
+- nullability
+- default value
+
+## Vyhodnocovani dotazu
+
+- dotaz: serie operatoru
+- provadi optimalizace jako SQL v relacni algebre
+  - posunuti operatoru, nahrazeni sekvence operatoru efektivnejsi apod.
+
+## Docasna pole
+
+- mohou zlepsit vykonost
+- negaratuji ACID vlastnosti
+- nejsou persistnenti (jen in memory)
+- bez verzi
+
+## Multidimensional Array Clustering
+
+1. **Organizace dat:**
+
+   - Data blízká v souřadnicovém systému jsou ve stejném chunku a ve stejném pořadí jako souřadnice
+   - Atributy jsou ukládány odděleně
+
+2. **Efektivní ukládání:**
+
+   - Data v chunku jsou ukládána do souvislých bloků a komprimována
+   - Souřadnice nejsou ukládány, ale vypočítávány
+
+3. **Překrývání chunků (overlap):**
+   - Překryv replikuje data do sousedních chunků
+   - Zvyšuje výkon dotazů na **okna** bez potřeby speciálního programování
+   - Vyžaduje více úložného prostoru, ale urychluje operace
+
+# Search Enginy
+
+- neni pozadavek na pevnou strukturu dat narozdil od relacnich DBMS
+
+## Vhodna vyuziti
+
+- ### Fulltext search
+- ### Log analysis
+- ### Relevance-based search
+
+# ElasticSearch
+
+- distribuovany full-text search engine
+- HTTP web interface
+- skoro real time vyhledavani
+
+## Index
+
+- kolekce dokumentu s podobnou charakteristikou
+- vzdy pojmenovany
+- indexy lze shardovat a pak replikovat
+
+### Tvorba indexu
+
+- definujeme pocet shardu a replik
+- kazdy shard je sam o sobe funkcni index
+
+# Relacni algebra
