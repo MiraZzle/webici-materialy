@@ -1,3 +1,8 @@
+<script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+<script type="text/x-mathjax-config">
+  MathJax.Hub.Config({ tex2jax: {inlineMath: [['$', '$']]}, messageStyle: "none" });
+</script>
+
 # **Materiály ke zkoušce z Moderních databázových systémů**
 
 [**Stránky předmětu**](https://www.ksi.mff.cuni.cz/~holubova/NDBI040/)
