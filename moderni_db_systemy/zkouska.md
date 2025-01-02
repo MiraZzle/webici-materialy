@@ -3140,4 +3140,157 @@ ALLOW FILTERING;
 - definujeme pocet shardu a replik
 - kazdy shard je sam o sobe funkcni index
 
+# Transakce
+
+- **business transakce** = serie systemovych transakci
+- **offline concurrency** = manipulaci s daty a az potom je ulozime
+
+  > Uživatel načte objednávky, upraví je lokálně a pak výsledky uloží zpět do databáze.
+
+## Problémy
+
+![alt](./images/transaction_problems.png)
+
+## Optimisticky offline lock
+
+- predpoklada **nizkou sanci konfliktu**
+- **Pred commitem**:
+  1. Klient znovu precte data, se kterymi business transakce manipuluje
+  2. Kontrola zda se prectena data nezmenila od zacatku business transakce
+
+## Pesimisticky offline lock
+
+- dovoluje pouze jedne business transakci pristupovat k danym datum
+- nutnost uzamknout data business transakcí predtim nez je zacne pouzivat
+- standartni problem: deadlock
+  - muzeme resit timeout aplikace nebo timestampem locku
+
+## Coarse-grained Lock
+
+- pokryva vice souvisejicich zdroju najednou (skupinu)
+- vhodne v moment, kdy objekty potrebujeme upravovat jako skupinu
+- pro implementaci je nutny sofistikovany lock manager
+
+![alt](./images/coarse_grained_lock.png)
+
+## Implicit lock
+
+- zamky jsou ziskany automaticky aplikaci
+
+# Performance Tuning
+
+- MapReduce umoznuje horizontalni skalovani bez bottlenecku
+
+## Linearni skalovatelnost
+
+- **Předpoklad:** Úlohy lze paralelizovat do rovnoměrně rozložených jednotek.
+
+**Typický model s horizontálním škálováním (MapReduce):**
+
+- **Lineární škálovatelnost**:
+  - Jeden uzel může zpracovat **`x` MB/s**.
+  - **`n` uzlů** může zpracovat **`x × n` MB/s**.
+
+### **Vzorce:**
+
+1. **Čas pro zpracování dat na jednom uzlu:**
+
+   - **`t = y / x`** (v sekundách), kde:
+     - `y`: množství dat ke zpracování (MB).
+     - `x`: rychlost zpracování jednoho uzlu (MB/s).
+
+2. **Čas pro zpracování na `n` uzlech:**
+   - **`t / n`**, kde:
+     - `n`: počet uzlů.
+
+## Amdahluv zakon
+
+- vzorec pro nalezeni maximalniho zlepseni vykonu systemu po vylepseni jeho casti
+- `P` = cast programu, ktera je paralelizovana
+- `1-P` = cast programu, ktera nemuze byt paralelizovana
+- `N` = kolikrat lepsi vykon ma paralelizovana cast oproti te bez
+
+$$ S(N) = \frac{1}{(1-P) + \frac{P}{N}} $$
+
+- `N` jde vetsinou k nekonecnu
+- `S(N)` je celkove zlepseni vykonu programu
+
+### **Příklad:**
+
+- Program běží **5 hodin (300 minut)**
+- Paralelizovatelná část: **275 minut (91,6 % programu)**
+- Neparalelizovatelná část: **25 minut (8,4 % programu)**
+
+**Maximální zvýšení rychlosti:**
+
+$$
+S(N) = \frac{1}{1 - 0.916} = \frac{1}{0.084} \approx 11.9 \text{krát rychleji}
+$$
+
+- **Výsledek:** Program může být maximálně **11,9krát rychlejší**, pokud je paralelizace perfektní.
+
+## Littluv zakon
+
+- **Analýza zatížení stabilních systémů:**
+  - Zákazník vstoupí do fronty a je obsloužen během konečného času.
+- puvod v ekonomii
+- `L`: průměrný počet zákazníků ve stabilním systému.
+- `k`: průměrná rychlost příchodu zákazníků (za časovou jednotku).
+- `W`: průměrný čas, který každý zákazník stráví v systému.
+
+$$ L = k \cdot W $$
+
+- **Vlastnosti:**
+  - Výsledek není ovlivněn rozložením příchodů, obsluhy, pořadím obsluhy ani jinými faktory.
+
+---
+
+### **Příklad:**
+
+- **Čerpací stanice:** Pouze hotovostní platby u jednoho pultu.
+  - **Příchod:** 4 zákazníci za hodinu (**`k = 4`**).
+  - **Doba strávená každým zákazníkem:** 15 minut = 0,25 hodiny (**`W = 0.25`**).
+
+**Výpočet:**
+
+$$ L = 4 \cdot 0.25 = 1 $$
+
+- **Interpretace:** V průměru je na čerpací stanici vždy 1 zákazník.
+
+- **Důsledek:** Pokud přijde více než 4 zákazníci za hodinu, vznikne **bottleneck**
+
+## Message cost model
+
+- Náklady na odeslání zprávy z jednoho konce na druhý se skládají z fixních a variabilních složek.
+- `C`: celkové náklady na odeslání zprávy.
+- `a`: fixní náklady (základní náklady na odeslání zprávy).
+- `b`: variabilní náklady (náklady za bajt zprávy).
+- `N`: počet bajtů zprávy.
+
+$$ C = a + b \cdot N $$
+
+- **Vlastnosti:**
+  - Nejlepší způsob, jak minimalizovat náklady, je odesílat co největší balíky dat najednou.
+
+---
+
+### **Příklad: Gigabitový Ethernet**
+
+- **Hodnoty:**
+
+  - **`a` = 0.3 ms** (300 mikrosekund).
+  - **`b` = 1 sekunda na 125 MB** (odpovídá přenosové rychlosti 125 MB/s).
+
+- **Výpočty:**
+
+  1. **100 zpráv po 10 KB:**
+     $$ C = 100 \cdot (0.3 + \frac{10}{125}) \text{ ms} $$
+     $$ C = 100 \cdot (0.3 + 0.08) \text{ ms} $$
+     $$ C = 38 \text{ ms} $$
+
+  2. **10 zpráv po 100 KB:**
+     $$ C = 10 \cdot (0.3 + \frac{100}{125}) \text{ ms} $$
+     $$ C = 10 \cdot (0.3 + 0.8) \text{ ms} $$
+     $$ C = 11 \text{ ms} $$
+
 # Relacni algebra
