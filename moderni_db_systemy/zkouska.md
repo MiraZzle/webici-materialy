@@ -11,20 +11,33 @@
 
 ## **Osnova**
 
-- [Vrstvy databázových modelů](#vrstvy-databázových-modelů)
-- [Big Data](#big-data)
-  - [Definice](#definice-podle-gartneru---společnost-pro-it-analýzy-a-poradenství)
-  - [Zdroje Big Data](#zdroje-big-data)
-  - [Hlavní charakteristiky Big Data](#hlavní-charakteristiky-big-data)
-  - [Zpracování Big Data](#zpracování-big-data)
-- [Výhody NoSQL databází](#výhody-nosql-databází)
-- [MapReduce](#mapreduce)
-- [Apache Spark](#apache-spark)
-  - [RDD operace](#rdd-operace)
-    - [Transformace](#rdd-transformace)
-    - [Akce](#rdd-akce)
-- [Distribuční modely](#distribucni-modely)
-- [Cloud computing](#cloud-computing)
+1. [Vrstvy databázových modelů](#vrstvy-databázových-modelů)
+2. [Big Data](#big-data)
+3. [HDFS](#hdfs)
+4. [MapReduce](#mapreduce)
+5. [Apache Spark](#apache-spark)
+6. [Principy MDBS](#principy-mdbs)
+7. [Distribuční modely](#distribucni-modely)
+8. [Zpracování Big Data](#zpracování-big-data)
+9. [Key-value databáze](#key-value-databáze)  
+   9.1. [Riak](#riak-key-value---multimodel)  
+   9.2. [Redis](#redis-key-value--multi-model)
+10. [Sloupcové databáze](#sloupcové-databaze)  
+    10.1. [Cassandra](#cassandra-sloupcové---multimodel)
+11. [Dokumentové databáze](#dokumentové-databáze)  
+    11.1. [MongoDB](#mongodb-dokumentové)
+12. [Grafové databáze](#grafové-databáze)  
+    12.1. [Neo4J](#neo4j-grafové)
+13. [Multimodel databáze](#multimodel-databáze)
+14. [Polystores](#polystores)
+15. [NewSQL databáze](#newsql-databáze)
+16. [Array databáze](#array-databáze-databáze-polí)  
+    16.1. [SciDB](#scidb-array)
+17. [Search enginy](#search-enginy)  
+    17.1. [ElasticSearch](#elasticsearch)
+18. [Transakce](#transakce)
+19. [Performance tuning](#performance-tuning)
+20. [Relační algebra a optimalizace MapReduce](#relační-algebra-a-optimalizace-mapreduce)
 
 ---
 
@@ -885,7 +898,7 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
   - Zápisy s konflikty: Pouze jeden může získat většinu.
   - Pro zajištění aktuální hodnoty musíme kontaktovat dostatečný počet uzlů.
 
-# **Zpracováni Big Data**
+# **Zpracování Big Data**
 
 ## **Úkoly pro Big Data**
 
@@ -923,7 +936,7 @@ List<Integer> largestTwo = rdd.takeOrdered(2, Comparator.reverseOrder()); // Vý
 - jednoducha skalovatelnost
 - nevyhoda je vendor lock-in
 
-# **Key-value databaze**
+# **Key-value databáze**
 
 - prakticky hash table
 - hodnota je BLOB (nespecifikovany typ a struktura - muze byt cokoliv)
@@ -1388,7 +1401,7 @@ QUEUED
 - system pro managing Redis instanci
 - monitorovani, notifikace, automaticky failover
 
-# **Sloupcove databaze**
+# **Sloupcové databaze**
 
 - **Column-oriented DBMS:** Ukládá data tabulek ve formě sloupců místo řádků (není nutně NoSQL).
 - **Column-family DBMS:** NoSQL databáze, která podporuje tabulky s různým počtem a typy sloupců.
@@ -1417,7 +1430,7 @@ QUEUED
 
 - ### Agregovani dat v dotazech
 
-# **Cassandra (sloupcove -> multimodel)**
+# **Cassandra (sloupcové -> multimodel)**
 
 - Vyvinuta ve FB
 - Ma vlastni query jazyk `CQL`
@@ -2040,7 +2053,7 @@ ALLOW FILTERING;
 
 - komponenta Cassandry informujici o sitove topologii
 
-# **Dokumentove databaze**
+# **Dokumentové databáze**
 
 - hodnoty jsou ukladany jako dokumenty
   - dokumenty = hierarchicke formaty XML, JSON apod.
@@ -2059,7 +2072,7 @@ ALLOW FILTERING;
 - ### **Koplexni transakce pres vice operaci**
 - ### A**gregovane dotazy**
 
-# **MongoDB (dokumentove)**
+# **MongoDB (dokumentové)**
 
 - pouziva **JSON** dokumenty
 - podpora indexace
@@ -2628,12 +2641,12 @@ ALLOW FILTERING;
   ```
   - Tímto způsobem se transakce přiřadí konkrétní aplikaci a zajistí se atomická změna.
 
-# **Grafove databaze**
+# **Grafové databáze**
 
 - umoznuji modelovat komplexni vztahy mezi objekty
 - vztahy jsou persistentni a nejsou vypocteny behem dotazu narozdil od relacnnich dbs
 
-# **Neo4J (grafove)**
+# **Neo4J (grafové)**
 
 - ma plne ACID vlastnosti
 - otpimalizovana pro propojena data
@@ -2862,7 +2875,7 @@ ALLOW FILTERING;
 - properties = linked list property zaznamu
   - key + value + ref na dalsi vlastnost
 
-# **Multimodel databaze**
+# **Multimodel databáze**
 
 - u big data prichazi problem s Variety
 - podpora vice datovych modelu v jednom integrovanem BE
@@ -3015,7 +3028,7 @@ ALLOW FILTERING;
 
 ![alt](./images/polystores_hybrid.png)
 
-# **NewSQL databaze**
+# **NewSQL databáze**
 
 - novy / alternativno pristup k SQL DBMS
 - **idea:** skalovatelne uloziste + funkcionalita tradicnich relacnich dbs
@@ -3037,7 +3050,7 @@ ALLOW FILTERING;
 
 > pozorovani: tradicni databaze provadi skutecnou praci mene nez 10 % casu
 
-# **Array databaze (databaze polí)**
+# **Array databáze (databáze polí)**
 
 - specificky pro data reprezentovana jako n-dimenzionalni pole
 
@@ -3284,4 +3297,81 @@ $$ C = a + b \cdot N $$
      $$ C = 10 \cdot (0.3 + 0.8) \text{ ms} $$
      $$ C = 11 \text{ ms} $$
 
-# Relacni algebra
+# **Relační algebra a optimalizace MapReduce**
+
+## **Relační algebra a SQL**
+
+1. **Kompozičnost dotazovacího jazyka:**
+
+   - Schopnost spouštět dotaz na výsledku jiného dotazu.
+   - Používá se například u **VIEWS** v SQL.
+
+2. **SQL (multiset) vs. Relační algebra (set):**
+
+   - SQL umožňuje **zachování duplikátů**.
+   - Relační algebra vynucuje **unikátnost**, což může být méně efektivní.
+
+3. **Přirozený spoj (natural join):**
+
+   - Asociativní a komutativní operace.
+   - Představuje kombinaci kartézského součinu a selekce.
+
+4. **SQL jako deklarativní jazyk:**
+
+   - Specifikujeme **co chceme**, ne **jak toho dosáhnout**.
+
+5. **Optimalizace dotazů:**
+   - Posun selekcí níže ve stromu snižuje množství zpracovávaných dat.
+   - Preferujeme spoje (joins) před kartézským součinem kvůli lepší efektivitě.
+
+## **Optimalizace dotazů**
+
+1. **Parser a optimalizátor:**
+
+   - **Parser:** Převádí deklarativní SQL do algebraických výrazů.
+   - **Optimalizátor:** Generuje efektivní plán vykonání dotazu.
+
+2. **Katalog databáze:**
+
+   - Obsahuje metadata (schémata, tabulky) a statistiky o datech.
+
+3. **Pravidla optimalizace:**
+
+   - Přepisují dotazové plány na ekvivalentní efektivnější verze.
+   - Například:
+     $$ \sigma*{r \land q}(R) \equiv \sigma*{r}(\sigma\_{q}(R)) $$
+
+4. **Levostranné (left-deep) vs. rozvětvené (bushy) stromy:**
+   - **Left-deep:** Sekvenční spoje, jednodušší správa.
+   - **Bushy:** Paralelní spoje, efektivnější pro velká data.
+
+## **MapReduce a komunikace**
+
+1. **MapReduce:**
+
+   - Kombinátor lze použít, pokud je redukční operace komutativní a asociativní.
+   - Počet mapovacích úloh odpovídá počtu chunků vstupního souboru.
+
+2. **Komunikační náklady:**
+
+   - Při zpracování relací $R(A, B)$ a $S(B, C)$:
+     $$ O(|R| + |S|) $$
+   - Hlavní náklady zahrnují **načítání dat z disku** a **síťovou komunikaci**.
+
+3. **Optimalizace:**
+
+   - Snižování počtu meziproduktů zkracuje dobu trvání výpočtů.
+
+4. **Wall-clock time:**
+   - Celkový čas pro dokončení paralelního algoritmu.
+   - Minimalizace komunikace nemusí vždy zkrátit celkový čas.
+
+## **Řetězení a optimalizace MapReduce**
+
+1. **Spojení úloh:**
+
+   - Snižuje IO náklady a zjednodušuje správu úloh.
+   - Nevýhody: složitější ladění a ztráta znovupoužitelnosti.
+
+2. **Řetězení Map-only a MapReduce:**
+   - Spojení mapovacích operací do jedné úlohy může snížit časovou i paměťovou náročnost.
