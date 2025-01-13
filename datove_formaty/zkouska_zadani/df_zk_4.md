@@ -9,5 +9,5 @@
 7. Na příkladu vysvětlete, jak lze v JSON-LD zachovat pořadí hodnot v poli.
 8. Popište 3 validační klíčová slova v JSON Schema.
 9. Vysvětlete XPath osu attribute::.
-10. Vysvětlete rozdíl mezi jednoduchým a složitým typem v XML Schema.
+10. Vysvětlete rozdíl mezi jednoduchým a composite typem v XML Schema.
 11. Co je QID ve Wikidatech?
