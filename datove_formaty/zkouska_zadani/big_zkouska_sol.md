@@ -8,29 +8,36 @@
 
 2. Co je to reifikace?  
    -- proces přidávání metadat RDF statementům 
+   ```
    my:index.html my:createdBy "Jakub Klímek" .
-
+   ```
+    ```
    _:triple1 a rdf:Statement .
    _:triple1 rdf:subject	my:index.html	.
    _:triple1 rdf:predicate	my:createdBy	.
    _:triple1 rdf:object	"Jakub Klímek"	.
+   ```
 
 3. Popište RDF\*. Uveďte příklad.  
    --- řeší přidávání metadat k RDF statementům 
-   
+   ```
    my:index.html my:createdBy "Jakub Klímek" .
-
+   ```
+    ```
     << my:index.html my:createdBy "Jakub Klímek" >> 
      dcterms:source "https://x.y.z"^^xsd:anyURI ;
      dcterms:created "2020-04-23"^^xsd:date .
+     ```
 
 4. Jak se liší prefixovaná a relativní IRI v kontextu RDF?  
+    ```
     @prefix foo: <http://example.org/ns#> . ---- HARDCODING
     <#document> foo: <https://jk.com> .
         ----- název instance 
 
     @base <http://newbase.com/> .           ---- změní "zákládní" IRI 
     <#document> foo: <https://jk.com> .
+    ```
    
 
 5. Co je Linked Data Vocabularies?  
@@ -322,7 +329,9 @@ Příklad:
    ```
 
 3. Co je relační datový model v kontextu CSV on the Web?  
-    - 
+    - stavební jednotka: tabulka - sloupce, primární klíče
+    - v kontextu CSV je tabulka samostatný soubor s popsaným (volitelně) sloupečky
+    - v jsonld nadefinuji primary a foreign keys + vzájemné vztahy
 
 ### **Formáty** (1ka neexistuje)
 2. Uveďte příklady otevřených a licencovaných formátů videa.  
@@ -439,9 +448,19 @@ Příklad:
 
 
 
-### **Datové modely a databáze**
-   
-   
+### **POSLEDNÍ PŘÍKLADY**
+    --- datový formát, schéma, příklad data samplu
+
+1. Airline (- name, - number of employees)
+1 -------(owns)------- 0...n
+Airplane (- name, capacity, number of engines)
+
+    ----> výměna dat mezi veřejnou administrací skrze webové services
+    -- běžné queries: 
+    počet motorů (number of engines) vlastněný Airline
+    poče Airplanes na employee 
+
+
 
 2. Navrhněte datový model, kde zaměstnanec pracuje v budově a může mít jiného zaměstnance jako nadřízeného.  
     
