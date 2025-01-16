@@ -113,7 +113,7 @@ BONUS
    - atribut v templatu, ve kterém odlišuji zpracování stejně zacílených věcí 
    = vytvoření šablon 
 
-   ```
+```
    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   
   <!-- Šablona pro režim "mode1" -->
@@ -139,7 +139,7 @@ BONUS
   </xsl:template>
 
   </xsl:stylesheet>
-  ```
+  
 ```
 
    
