@@ -81,7 +81,7 @@ BONUS
 -- použití jako konektory lokálně 
 
 10. Serializace RDF
--- N-triples, RDF Turtle, N-Quads (pojmenovaní grafu navíc)
+    -- N-triples, RDF Turtle, N-Quads (pojmenovaní grafu navíc)
 
 
 ### **Wikidata**
