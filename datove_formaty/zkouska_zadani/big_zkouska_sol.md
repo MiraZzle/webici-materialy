@@ -71,8 +71,24 @@ WHERE {
 8. Vysvětlete SKOS:exactMatch a použijte na příkladu.  
     - možnost linkovat entity napříč slovníky (auťák = auto)
     - tranzitivní (A = B, B = C, tedy A = C)
-    --- např. 
-   
+    --- např.
+
+```
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex1: <http://example.org/vocabulary1/> .
+@prefix ex2: <http://example.org/vocabulary2/> .
+
+# Koncept v prvním zdroji
+ex1:Jazz
+    a skos:Concept ;
+    skos:prefLabel "Jazz"@en ;
+    skos:exactMatch ex2:JazzGenre .
+
+# Koncept v druhém zdroji
+ex2:JazzGenre
+    a skos:Concept ;
+    skos:prefLabel "Jazz Music"@en .
+``` 
    
 BONUS
 
