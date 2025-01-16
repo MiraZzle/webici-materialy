@@ -481,9 +481,86 @@ Airplane (- name, capacity, number of engines)
     ----> výměna dat mezi veřejnou administrací skrze webové services
     -- běžné queries: 
     počet motorů (number of engines) vlastněný Airline
-    poče Airplanes na employee 
+    poče Airplanes na employee
 
+```
+{
+  "airlines": [
+    {
+      "name": "SkyHigh Airlines",
+      "numberOfEmployees": 200,
+      "airplanes": [
+        {
+          "name": "Boeing 747",
+          "capacity": 400,
+          "numberOfEngines": 4
+        },
+        {
+          "name": "Airbus A320",
+          "capacity": 180,
+          "numberOfEngines": 2
+        }
+      ]
+    },
+    {
+      "name": "JetStream Airlines",
+      "numberOfEmployees": 100,
+      "airplanes": [
+        {
+          "name": "Embraer E190",
+          "capacity": 100,
+          "numberOfEngines": 2
+        }
+      ]
+    }
+  ]
+}
 
+```
+   
+schema:
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "airlines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "numberOfEmployees": { "type": "integer", "minimum": 0 },
+          "airplanes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "capacity": { "type": "integer", "minimum": 0 },
+                "numberOfEngines": { "type": "integer", "minimum": 0 }
+              },
+              "required": ["name", "capacity", "numberOfEngines"]
+            }
+          }
+        },
+        "required": ["name", "numberOfEmployees", "airplanes"]
+      }
+    }
+  },
+  "required": ["airlines"]
+}
+```
 
-2. Navrhněte datový model, kde zaměstnanec pracuje v budově a může mít jiného zaměstnance jako nadřízeného.  
+dotazy:
+1.:
+```
+.airlines[] | select(.name == "SkyHigh Airlines") | .airplanes[].numberOfEngines | add
+```
+2.:
+```
+.airlines[] | select(.name == "SkyHigh Airlines") | (.airplanes | length) / .numberOfEmployees
+```
+
+3. Navrhněte datový model, kde zaměstnanec pracuje v budově a může mít jiného zaměstnance jako nadřízeného.  
     
