@@ -120,13 +120,11 @@ WHERE {
 @prefix ex1: <http://example.org/vocabulary1/> .
 @prefix ex2: <http://example.org/vocabulary2/> .
 
-ex1:Jazz
-    a skos:Concept ;
+ex1:Jazz a skos:Concept ;
     skos:prefLabel "Jazz"@en ;
     skos:exactMatch ex2:JazzGenre .
 
-ex2:JazzGenre
-    a skos:Concept ;
+ex2:JazzGenre a skos:Concept ;
     skos:prefLabel "Jazz Music"@en .
 ```
 
@@ -152,10 +150,12 @@ ex2:JazzGenre
 #### **1. Vlastnosti tvrzení v Wikidatech?**
 
 - **Statement** obsahuje:
-  - Property (vlastnost).
+  - Property (vlastnost). - má `PID` property ID
   - Value (hodnotu).
   - Rank (důležitost).
   - Qualifiers (upřesnění).
+    - Value
+    - Property
   - References (zdroje).
 
 #### **2. Co je QID ve Wikidatech?**
@@ -299,9 +299,9 @@ RETURN n
 
 #### **2. Uveďte 3 klíčová slova z JSON-LD.**
 
-- `@context`
-- `@id`
-- `@type`
+- **`@context`**: Určuje, jak mají být data interpretována.
+- **`@id`**: Jedinečný identifikátor objektu.
+- **`@type`**: Říká, jakého typu objekt je.
 
 #### **3. Jakými třemi způsoby můžeme na JSON přidat JSON-LD kontext?**
 
@@ -420,10 +420,13 @@ RETURN n
 
 #### **1. Popište CSV podle přesného RFC.**
 
-- Formát oddělený čárkami, zakončení řádků CRLF.
-- Kódování UTF-8 bez BOM.
-- Escapování hodnot pomocí dvojitých uvozovek (").
-- Hlavička je volitelná, ale doporučená.
+#### **CSV (Comma-Separated Values)**
+
+- **Struktura**: Formát pro ukládání tabulkových dat, kde jsou hodnoty oddělené čárkami.
+- **Hlavička**: První řádek může obsahovat názvy sloupců (volitelné).
+- **Řádky**: Každý řádek představuje jeden záznam (rekord).
+- **Formátování**: Textové hodnoty mohou být uzavřeny v uvozovkách (`"`), zvláště pokud obsahují čárku nebo nový řádek.
+- **Oddělovač řádků**: Každý řádek je ukončen znakem CRLF
 
 #### **2. Jak pomocí URI zacílit na různé části CSV?**
 
