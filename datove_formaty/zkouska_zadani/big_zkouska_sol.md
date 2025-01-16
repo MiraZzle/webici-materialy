@@ -75,12 +75,13 @@ WHERE {
    
    
 BONUS
-9. prázdné uzly RDF
-   = resource bez URI, pouze lokální scope 
-   -- když nevím IRI / nechci použít (chci ale dát data lokálně objektu) či reifikace 
-   -- použití jako konektory lokálně 
 
-10. Serializace RDF
+9. prázdné uzly RDF
+    = resource bez URI, pouze lokální scope
+   -- když nevím IRI / nechci použít (chci ale dát data lokálně objektu) či reifikace
+   -- použití jako konektory lokálně
+   
+11. Serializace RDF
     -- N-triples, RDF Turtle, N-Quads (pojmenovaní grafu navíc)
 
 
