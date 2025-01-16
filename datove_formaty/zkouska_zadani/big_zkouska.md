@@ -1,6 +1,7 @@
 ## Otázky podle kategorií
 
 ### **RDF**
+
 - RDF:List
 - Co je to reifikace?
 - Popište RDF\*. Uveďte příklad.
@@ -12,6 +13,7 @@
 - Jak lze specifikovat RDF zdroj v JSON-LD?
 
 ### **JSON/JSON-LD**
+
 - Co je keyword aliasing v JSON-LD?
 - Uveďte 3 klíčová slova ze JSON-LD.
 - Jakými třemi způsoby můžeme na JSON přidat JSON-LD kontext?
@@ -21,6 +23,7 @@
 - Popište 3 validační klíčová slova v JSON Schema.
 
 ### **XML/XPath/XSLT**
+
 - Co je mode v XSLT?
 - Uveďte příklad osy v XPath.
 - Vysvětlete XPath osu attribute::.
@@ -29,6 +32,7 @@
 - Popište XML DOM.
 
 ### **Formáty a standardy**
+
 - Popište CSV podle přesného RFC.
 - Uveďte příklady otevřených a licencovaných formátů videa.
 - Uveďte formát vhodný pro archivaci dokumentů. Popište jeho vlastnosti. Proč je vhodný pro archivaci?
@@ -40,14 +44,17 @@
 - Co je multimediální formát? Uveďte příklad.
 
 ### **Datové modely a databáze**
+
 - Co je relační datový model v kontextu CSV on the Web?
 - Navrhněte datový model, kde zaměstnanec pracuje v budově a může mít jiného zaměstnance jako nadřízeného.
 
 ### **Wikidata**
+
 - Vlastnosti tvrzení v Wikidatech?
 - Co je QID ve Wikidatech?
 
 ### **Grafika a multimédia**
+
 - Co je dithering?
 - Popište pixel/dot density. Čím je reprezentovaný?
 - Popište ztrátové a bezeztrátové kompresní metody pro rastrovou grafiku. Uveďte konkrétní formáty.
@@ -56,12 +63,15 @@
 - Co je diskrétní kosinová transformace?
 
 ### **Zvuk**
+
 - Popište Pulse-Code Modulation v kontextu digitálního zvuku.
 
 ### **Cypher**
+
 - Co je set v Cypher?
 
 ### **Obecné technologie a koncepty**
+
 - Co je CQL?
 - Co je souřadnicový systém?
 - Proč vznikl TeX?
