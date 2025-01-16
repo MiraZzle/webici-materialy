@@ -71,17 +71,34 @@ WHERE {
 8. Vysvětlete SKOS:exactMatch a použijte na příkladu.  
     - možnost linkovat entity napříč slovníky (auťák = auto)
     - tranzitivní (A = B, B = C, tedy A = C)
-    --- např. 
-   
+    --- např.
+
+```
+@prefix skos: <http://www.w3.org/2004/02/skos/core#> .
+@prefix ex1: <http://example.org/vocabulary1/> .
+@prefix ex2: <http://example.org/vocabulary2/> .
+
+# Koncept v prvním zdroji
+ex1:Jazz
+    a skos:Concept ;
+    skos:prefLabel "Jazz"@en ;
+    skos:exactMatch ex2:JazzGenre .
+
+# Koncept v druhém zdroji
+ex2:JazzGenre
+    a skos:Concept ;
+    skos:prefLabel "Jazz Music"@en .
+``` 
    
 BONUS
-9. prázdné uzly RDF
-= resource bez URI, pouze lokální scope 
--- když nevím IRI / nechci použít (chci ale dát data lokálně objektu) či reifikace 
--- použití jako konektory lokálně 
 
-10. Serializace RDF
--- N-triples, RDF Turtle, N-Quads (pojmenovaní grafu navíc)
+9. prázdné uzly RDF
+   - resource bez URI, pouze lokální scope
+   -- když nevím IRI / nechci použít (chci ale dát data lokálně objektu) či reifikace
+   -- použití jako konektory lokálně
+   
+11. Serializace RDF
+    - N-triples, RDF Turtle, N-Quads (pojmenovaní grafu navíc)
 
 
 ### **Wikidata**
@@ -105,7 +122,8 @@ BONUS
 2. V čem "exceluje" LPG?
     - vhodné pro popis metadat vztahů mezi entitami 
     - má grafové algoritmy 
-    ```(:Person {name: "John", age: 30})-[:KNOWS]->(:Person {name: "Alice", age: 25}) 
+    ```
+    (:Person {name: "John", age: 30})-[:KNOWS]->(:Person {name: "Alice", age: 25}) 
     ```
 
 ### **XML/XPath/XSLT**
@@ -113,7 +131,7 @@ BONUS
    - atribut v templatu, ve kterém odlišuji zpracování stejně zacílených věcí 
    = vytvoření šablon 
 
-    ```
+```
    <xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">
   
   <!-- Šablona pro režim "mode1" -->
@@ -138,7 +156,9 @@ BONUS
     </html>
   </xsl:template>
 
-  </xsl:stylesheet>```
+  </xsl:stylesheet>
+  
+```
 
    
 
@@ -187,7 +207,8 @@ BONUS
 
 9. Co jsou CDATA sekce?
     - možnost mít string se special znaky, které se neinterpretují 
-    ```<example>
+```
+<example>
   <![CDATA[
     <html>
       <body>
@@ -195,12 +216,14 @@ BONUS
       </body>
     </html>
   ]]>
-    </example>```
+    </example>
+```
 
 ### **JSON/JSON-LD**
 1. Co je keyword aliasing v JSON-LD?  
    - definujeme v contextu
-```{
+```
+{
   "@context": {
     "schema": "http://schema.org/",
     "name": "schema:name",
@@ -458,9 +481,86 @@ Airplane (- name, capacity, number of engines)
     ----> výměna dat mezi veřejnou administrací skrze webové services
     -- běžné queries: 
     počet motorů (number of engines) vlastněný Airline
-    poče Airplanes na employee 
+    poče Airplanes na employee
 
+```
+{
+  "airlines": [
+    {
+      "name": "SkyHigh Airlines",
+      "numberOfEmployees": 200,
+      "airplanes": [
+        {
+          "name": "Boeing 747",
+          "capacity": 400,
+          "numberOfEngines": 4
+        },
+        {
+          "name": "Airbus A320",
+          "capacity": 180,
+          "numberOfEngines": 2
+        }
+      ]
+    },
+    {
+      "name": "JetStream Airlines",
+      "numberOfEmployees": 100,
+      "airplanes": [
+        {
+          "name": "Embraer E190",
+          "capacity": 100,
+          "numberOfEngines": 2
+        }
+      ]
+    }
+  ]
+}
 
+```
+   
+schema:
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "properties": {
+    "airlines": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": { "type": "string" },
+          "numberOfEmployees": { "type": "integer", "minimum": 0 },
+          "airplanes": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": { "type": "string" },
+                "capacity": { "type": "integer", "minimum": 0 },
+                "numberOfEngines": { "type": "integer", "minimum": 0 }
+              },
+              "required": ["name", "capacity", "numberOfEngines"]
+            }
+          }
+        },
+        "required": ["name", "numberOfEmployees", "airplanes"]
+      }
+    }
+  },
+  "required": ["airlines"]
+}
+```
 
-2. Navrhněte datový model, kde zaměstnanec pracuje v budově a může mít jiného zaměstnance jako nadřízeného.  
+dotazy:
+1.:
+```
+.airlines[] | select(.name == "SkyHigh Airlines") | .airplanes[].numberOfEngines | add
+```
+2.:
+```
+.airlines[] | select(.name == "SkyHigh Airlines") | (.airplanes | length) / .numberOfEmployees
+```
+
+3. Navrhněte datový model, kde zaměstnanec pracuje v budově a může mít jiného zaměstnance jako nadřízeného.  
     
