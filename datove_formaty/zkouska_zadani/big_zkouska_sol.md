@@ -122,7 +122,8 @@ BONUS
 2. V čem "exceluje" LPG?
     - vhodné pro popis metadat vztahů mezi entitami 
     - má grafové algoritmy 
-    ```(:Person {name: "John", age: 30})-[:KNOWS]->(:Person {name: "Alice", age: 25}) 
+    ```
+    (:Person {name: "John", age: 30})-[:KNOWS]->(:Person {name: "Alice", age: 25}) 
     ```
 
 ### **XML/XPath/XSLT**
