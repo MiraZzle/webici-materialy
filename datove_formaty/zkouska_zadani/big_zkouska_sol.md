@@ -189,7 +189,8 @@ BONUS
 
 9. Co jsou CDATA sekce?
     - možnost mít string se special znaky, které se neinterpretují 
-    ```<example>
+```
+<example>
   <![CDATA[
     <html>
       <body>
@@ -197,12 +198,14 @@ BONUS
       </body>
     </html>
   ]]>
-    </example>```
+    </example>
+```
 
 ### **JSON/JSON-LD**
 1. Co je keyword aliasing v JSON-LD?  
    - definujeme v contextu
-```{
+```
+{
   "@context": {
     "schema": "http://schema.org/",
     "name": "schema:name",
