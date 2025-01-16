@@ -2,15 +2,15 @@
 
 1. 4V u BigData
 
--   Volume - dat přibývá a je jejich stále větší a větší objem, který exponenciálně roste
--   Variety - data jsou velmi různorodé, data mohou být (částečně) strukturovaná i nestrukturovaná, jsou různových datových formátů a modelů a struktur
--   Velocity - jsou velké požadavky na zpracování, analyzování a vyhodnocování dat, nejlépe real-time
--   Veracity - data jsou často neúplná, poškozená ať už to je kvůli aproximacím, zakrouhlování, latenci, neucelenosti atd.
+- Volume - dat přibývá a je jejich stále větší a větší objem, který exponenciálně roste
+- Variety - data jsou velmi různorodé, data mohou být (částečně) strukturovaná i nestrukturovaná, jsou různových datových formátů a modelů a struktur
+- Velocity - jsou velké požadavky na zpracování, analyzování a vyhodnocování dat, nejlépe real-time
+- Veracity - data jsou často neúplná, poškozená ať už to je kvůli aproximacím, zakrouhlování, latenci, neucelenosti atd.
 
 2. Předvést výhody Map/Reduce na konkrétním příkladu + jak v tomto příkladě může pomoct metoda Combine
    Obecně metoda combine slouží jako "lokální reduce", tedy proběhne mezi map a reduce metodou. Jejím cílem je zkomprimovat data tak, aby se ušetřila práce jednotlivým reduce úlohám, tedy vlastně pro ně předpočítávají výsledky lokálně pro jednotlivé map operace.
 
-    Pro úlohu bych zvolil např. knihkupectví, kde ke každé knize kterou nabízí znám její cenu a počet prodaných kusů. Cílem je spočítat obrat knihkupectví. V map fázi emitnu každou knihu a celkový příjem pro danou knihu. Následující combine fáze může pro stejný klíč (stejnou knihu) sečíst již rovnou dané hodnoty obratu, čímž snížím celkový počet úloh pro reducer. Reducer potom agreguje všechny podvýsledky a pro každou knihu vypíše celkové příjmy za danou knihu.
+   Pro úlohu bych zvolil např. knihkupectví, kde ke každé knize kterou nabízí znám její cenu a počet prodaných kusů. Cílem je spočítat obrat knihkupectví. V map fázi emitnu každou knihu a celkový příjem pro danou knihu. Následující combine fáze může pro stejný klíč (stejnou knihu) sečíst již rovnou dané hodnoty obratu, čímž snížím celkový počet úloh pro reducer. Reducer potom agreguje všechny podvýsledky a pro každou knihu vypíše celkové příjmy za danou knihu.
 
 3. Rozdíl mezi scale-in a scale-out
    Scale-in (vertikální) je metoda škálování, kdy mám jeden stroj a ten daný stroj stále vylepšuji (lepší hw, ramky, paměť atd.). Nevýhodou tohoto přístupu je cena (drahé) a také fakt, že hw má stále určité limitace, tedy nemohu takto škálovat do nekonečna. Tuto metodu využívají relační databáze, zaručujue atomicitu.
@@ -20,15 +20,15 @@
    Master-slave replikace má 2 typy uzlů, primární (master) a sekundární (slave). Master se většinou stará o zápisy a update samotných dat, slaves slouží hlavně pro replikaci, tedy kopírování datasetů a udržování jeho kopií na různých místech. Nevýhodou je bottleneck, který představuje master, jelikož má omezenou kapacitu a tedy dokáže zpracovávat omezený počet requestů. Master může kdykovliv selhat a pak systém není plně funkční do zvolení nového mastera.
    P2P replikace má uzly, z nich všechny dokáží komunikovat s klientem (read write requesty). Řeší mnoho problému M/S architektury, tedy není zde žádný master, není tak tvořen horní limit výkonu, lze přesměrovat request na jiný, méně vytížený uzel. Musí se ale řešit W/W konflity, tedy případ, kdy 2 uživatelé upraví stejný soubor. To lze řešit již pži zápisu (zabránění konfliktu pomocí zámků). Nebo se také lze doptat ostatních replik na validnost dat, pokud souhlasí dostatečný počet, tak se data odešlou uživateli.
 
-    ### **Shrnutí rozdílů:**
+   ### **Shrnutí rozdílů:**
 
-    | Charakteristika           | Master-Slave                        | Peer-to-Peer                       |
-    | ------------------------- | ----------------------------------- | ---------------------------------- |
-    | **Architektura**          | Centralizovaná                      | Decentralizovaná                   |
-    | **Typ uzlů**              | Master (zápis), Slaves (čtení)      | Všechny uzly rovnocenné            |
-    | **Konzistence**           | Jednodušší, řízena masterem         | Řešení W/W konfliktů nutné         |
-    | **Odolnost vůči selhání** | Nízká (selhání masteru je kritické) | Vysoká (jiné uzly převezmou práci) |
-    | **Výkon**                 | Omezený masterem                    | Lépe škálovatelné                  |
+   | Charakteristika           | Master-Slave                        | Peer-to-Peer                       |
+   | ------------------------- | ----------------------------------- | ---------------------------------- |
+   | **Architektura**          | Centralizovaná                      | Decentralizovaná                   |
+   | **Typ uzlů**              | Master (zápis), Slaves (čtení)      | Všechny uzly rovnocenné            |
+   | **Konzistence**           | Jednodušší, řízena masterem         | Řešení W/W konfliktů nutné         |
+   | **Odolnost vůči selhání** | Nízká (selhání masteru je kritické) | Vysoká (jiné uzly převezmou práci) |
+   | **Výkon**                 | Omezený masterem                    | Lépe škálovatelné                  |
 
 5. Redis: proč není standardní key-value DB
    Redis není standarní key-value db, protože disponuje mnoha cache-like vlastnostmi, jako je nastavování time to live u klíčů.
