@@ -4,6 +4,8 @@ _Přednášející: Petr Škoda_
 
 _Rok: 2024/25_
 
+**Disclaimer**: `Vygenerováno Četem, za nic neruším - Mistrný pan M`
+
 # 📚 Obsah
 
 - [Towards Data Warehouse](#towards-data-warehouse)
