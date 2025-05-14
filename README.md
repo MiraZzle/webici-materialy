@@ -7,7 +7,7 @@ Materiály pro všechny přátele Webíku a databází
 - [Moderní databázové systémy](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI040)
 
 ## Chybějící předměty
-- [Vývoj databázových aplikací](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI026)
-- [Principy organizace dat](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI007)
-- [Úvod do datového inženýrství](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI046)
+- [Vývoj databázových aplikací](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI026) - *in progress*
+- [Principy organizace dat](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI007) - *in progress*
+- [Úvod do datového inženýrství](https://is.cuni.cz/studium/predmety/index.php?do=predmet&kod=NDBI046) - *in progress*
 
