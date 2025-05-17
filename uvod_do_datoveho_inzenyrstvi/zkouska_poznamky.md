@@ -112,14 +112,62 @@ _Rok: 2024/25_
 - **Facts**: fakta (např. počet prodaných kusů)
 - **Measures**: metriky (např. celkové tržby)
 
-### Hierarchie dimenzí
+---
 
-- Umožňuje operace:
+## 🔁 **Hierarchie dimenzí**
 
-  - **Drill up/down**
-  - **Slice/Dice**
-  - **Pivot**
-  - **Drill-across / Drill-through**
+Hierarchie dimenzí znamená, že určitou dimenzi lze členit na více úrovní podrobnosti. Například:
+
+- **Čas**: Rok → Čtvrtletí → Měsíc → Den
+- **Geografie**: Stát → Kraj → Okres → Obec
+- **Produkt**: Kategorie → Podkategorie → Produkt
+
+Díky těmto hierarchiím lze s datovou kostkou provádět různé operace:
+
+---
+
+## 🔎 **Drill-down / Drill-up (navigace v hierarchii)**
+
+- **Drill-down**: Jdeme do většího detailu (např. z kraje do okresu)
+
+  - Příklad: Celkový prodej v roce → rozpad na jednotlivé čtvrtletí
+
+- **Drill-up**: Agregujeme do vyšší úrovně (např. z obcí na úroveň krajů)
+
+  - Příklad: Denní návštěvnost webu → měsíční souhrn
+
+---
+
+## ✂️ **Slice / Dice**
+
+- **Slice**: Vybereme konkrétní „řez“ kostky, tj. jednu hodnotu určité dimenze
+
+  - Příklad: Zobrazit pouze prodej v roce 2023 → získáme 2D tabulku (např. kraje × produktové kategorie)
+
+- **Dice**: Vybereme konkrétní podmnožinu dat – více hodnot dimenzí najednou
+
+  - Příklad: Prodej v letech 2022–2023, pro produkty „elektronika“ a kraje „Jihomoravský“ a „Praha“
+
+---
+
+## 🔄 **Pivot (Rotace)**
+
+- Přetočení dimenzí – mění se osy analýzy
+
+  - Příklad: Změníme analýzu z „kraje podle roku“ na „roky podle krajů“
+  - Umožňuje jiný pohled na stejná data, často používané v tabulkách a grafech
+
+---
+
+## 🔁 **Drill-across / Drill-through**
+
+- **Drill-across**: Přístup k jiné datové kostce se sdílenou dimenzí
+
+  - Příklad: V jedné kostce vidíme prodeje, v druhé marketingové výdaje → můžeme je porovnat podle stejného kraje nebo období
+
+- **Drill-through**: Z pohledu v kostce přejdeme k detailním řádkům ve faktové tabulce
+
+  - Příklad: Celkový prodej v kraji = 1 000 000 Kč → kliknutím zobrazíme jednotlivé transakce, které to tvoří
 
 ---
 
@@ -276,7 +324,7 @@ Data Source -> Staging Area -> Data Warehouse
 - **Přijetí byznysem**: podpora modelu objevování a zpětné vazby
 - **Metadata**: end-to-end, lineage, kvalita
 - **Strategie reportingu**
-- **SLA** a kontrola kvality
+- **SLA** (service level agreement) - smlouva o kvalitě, aktuálnosti, dostupnosti dat
 
 ---
 
@@ -318,7 +366,7 @@ Data Source -> Staging Area -> Data Warehouse
 
 ---
 
-## 📐 Kimball Dimensional Modeling Techniques
+## 📐 (Ralph) Kimball Dimensional Modeling Techniques
 
 ### 📊 Fáze návrhu
 
@@ -378,7 +426,7 @@ Data Source -> Staging Area -> Data Warehouse
 ## 🧭 Práce s dimenzemi
 
 - **Casual dimension**
-- **Degenerate dimension**
+- **Degenerate dimension**: dim klíč, který nemá svoji dim tabulku
 - **Conformed (master) dimensions**: sdílené více tabulkami
 - **Drill-across**: přechod mezi různými fakta tabulkami
 
