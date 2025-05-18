@@ -48,13 +48,29 @@
 
 ## 📚 Typy řízených slovníků
 
-```markdown
-- **Controlled list** – plochý seznam hodnot (např. kódy jazyků)
-- **Taxonomy** – stromová hierarchie (např. „Zvíře > Savec > Pes“)
-- **Thesaurus** – hierarchie + synonyma + vztahy (např. EuroVoc)
-- **Classification scheme** – vícerozměrná kategorizace (např. NACE)
-- **Ontology** – plně formální model pojmů a vztahů (např. schema.org, Wikidata)
-```
+- **Controlled list** – plochý seznam hodnot
+
+  - 📌 Klíčová slova: `code list`, `enumeration`, `picklist`, `value set`, `notation`, `vocabulary`
+  - 🧾 Příklady: ISO 639 jazykové kódy (`cs`, `en`), měnové kódy (`CZK`, `EUR`), seznam pohlaví
+
+- **Taxonomy** – stromová hierarchie
+
+  - 📌 Klíčová slova: `broader`, `narrower`, `parent-child`, `hierarchy`, `categorization`, `facet`
+  - 🧾 Příklady: Biologická klasifikace, produktové kategorie e-shopu
+
+- **Thesaurus** – hierarchie + synonyma + asociace
+
+  - 📌 Klíčová slova: `altLabel`, `synonym`, `related term`, `semantic relations`, `multilingual`, `associative`, `polyhierarchy`
+  - 🧾 Příklady: EuroVoc, AGROVOC, Library of Congress Subject Headings
+
+- **Classification scheme** – vícerozměrná kategorizace
+
+  - 📌 Klíčová slova: `dimension`, `code`, `sector`, `economic activity`, `hierarchical code`, `section`, `class`, `subcategory`
+  - 🧾 Příklady: NACE, HS kódy (celní), CPV (veřejné zakázky), CZ-ISCO (zaměstnání)
+
+- **Ontology** – formální model reality (třídy, vztahy, pravidla)
+  - 📌 Klíčová slova: `class`, `object property`, `individual`, `axiom`, `inference`, `domain`, `range`, `restriction`, `instanceOf`, `semantic web`, `reasoner`
+  - 🧾 Příklady: FOAF, schema.org, Wikidata, CIDOC CRM, gUFO
 
 ---
 

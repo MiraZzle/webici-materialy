@@ -996,15 +996,17 @@ SELECT ?label WHERE {
 
 ## 🧱 Ontologické pojmy
 
-| Typ            | Popis                                                            |
-| -------------- | ---------------------------------------------------------------- |
-| **Concept**    | Jednotka významu (konkrétní nebo abstraktní pojem)               |
-| **Universal**  | Typ – reprezentuje třídu věcí se společnými vlastnostmi          |
-| **Individual** | Konkrétní instance (např. John, jeho auto)                       |
-| **Endurant**   | Entita přetrvávající v čase (např. osoba, auto)                  |
-| **Perdurant**  | Událost, která se děje v čase (např. měření rychlosti)           |
-| **Moment**     | Vlastnost závislá na jiných entitách                             |
-| **Relator**    | Vztah mezi entitami (např. vlastnictví auta, spáchání přestupku) |
+| Typ                  | Popis                                                                                       |
+| -------------------- | ------------------------------------------------------------------------------------------- |
+| **Concept**          | Abstraktní nebo konkrétní pojem, který může být instanciován                                |
+| **Universal**        | Typ věcí sdílejících vlastnosti – např. „Auto“, „Řidič“                                     |
+| **Individual**       | Konkrétní instance – např. `:John`, `:JohnsCar`                                             |
+| **Endurant**         | Entita, která **přetrvává v čase** – je plně přítomná v každém okamžiku své existence       |
+| **Substantial**      | **Existenciálně nezávislý endurant** – existuje samostatně (např. auto, člověk)             |
+| **Moment**           | **Existenciálně závislý endurant** – neexistuje bez hostitelské entity                      |
+| **Intrinsic Moment** | Závislý na **jedné** entitě – např. barva auta, věk osoby                                   |
+| **Relator**          | Závislý na **dvou nebo více** endurantech – např. vlastnictví, manželství                   |
+| **Perdurant**        | **Události** nebo procesy, které se dějí v čase – mají temporalitu (např. jízda, přednáška) |
 
 ---
 
